@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rat Catchers Owner App</title>
+<style>
+:root{--ink:#241a33;--bg:#f6f1e8;--card:#fff;--line:#d9cfc2;--muted:#6e6280;--acc:#7a4dff;--ok:#2f9e44;--bad:#d9363e;--warn:#e8890c;--side:#2a2040;--sideInk:#e9e2f5}
+*{box-sizing:border-box}
+#root{height:100%}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:2px solid var(--ink);background:#fff;border-radius:10px;padding:6px 12px;font-weight:600;box-shadow:0 2px 0 var(--ink)}
+button:active{transform:translateY(2px);box-shadow:none}
+button.p{background:var(--acc);color:#fff}button.ok{background:var(--ok);color:#fff}button.bad{background:var(--bad);color:#fff}button.y{background:#ffd23a}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{border:2px solid var(--line);border-radius:9px;padding:6px 9px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+input[type=number]{width:130px}
+textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+h1,h2,h3{margin:0}
+.app{display:grid;grid-template-columns:230px 1fr;height:100%}
+nav{background:var(--side);color:var(--sideInk);display:flex;flex-direction:column;gap:4px;padding:14px 10px;overflow:auto}
+nav .brand{font-weight:800;font-size:19px;padding:4px 8px 12px;line-height:1.1}
+nav .brand small{display:block;font-weight:500;font-size:12px;opacity:.7}
+nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:10px;font-weight:600}
+nav button:hover{background:rgba(255,255,255,.08)}nav button.on{background:#ffd23a;color:var(--ink)}
+nav .foot{margin-top:auto;font-size:12px;opacity:.75;padding:8px}
+main{overflow:auto;padding:20px 24px 40px}
+.grid{display:grid;gap:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h3{font-size:16px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted);font-size:13px}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;border:1.5px solid var(--ink);font-size:12px;font-weight:700;background:#fff}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv b{font-weight:600;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.field{display:grid;grid-template-columns:minmax(150px,1fr) auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px dashed #eee}
+.field label{font-size:14px}
+.field small{display:block;color:var(--muted);font-size:12px}
+.big{font-size:30px;font-weight:800}
+.toast{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:9}
+.toast div{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:10px 14px;box-shadow:0 4px 0 var(--ink);font-weight:600;max-width:380px}
+.toast .e{background:#ffe3e3}.toast .o{background:#e6f9e8}
+.login{display:grid;place-items:center;height:100%;padding:16px;background:radial-gradient(circle at 50% 20%,#ffe9a8,#f6f1e8 60%)}
+.login .card{width:min(460px,100%);display:grid;gap:10px;padding:22px}
+.login h1{font-size:26px}
+.ev{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:#fff}
+.ev.on{border-color:var(--ok);background:#effbf0}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);vertical-align:-1px;margin-right:6px}
+.warnbox{background:#fff4dc;border:2px solid #f0c060;border-radius:12px;padding:10px 14px}
+@media (max-width:760px){.app{grid-template-columns:1fr}nav{flex-direction:row;flex-wrap:wrap}nav .foot{display:none}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s), root = $('#root');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
+const saved = (() => { try { return JSON.parse(LS && LS.getItem('rc-owner') || '{}'); } catch (e) { return {}; } })();
+const keep = () => { try { LS && LS.setItem('rc-owner', JSON.stringify(saved)); } catch (e) {} };
+const fmt = n => { n = +n || 0; const a = Math.abs(n), u = ['', 'K', 'M', 'B', 'T', 'Qd']; let i = 0, v = a; while (v >= 1000 && i < u.length - 1) { v /= 1000; i++; } return (n < 0 ? '-' : '') + '$' + (i ? (v >= 100 ? v.toFixed(0) : v.toFixed(2).replace(/\.?0+$/, '')) : Math.round(v * 100) / 100) + u[i]; };
+const dur = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? h + 'h ' + m + 'm' : m ? m + 'm ' + x + 's' : x + 's'; };
+function toast(text, kind) { const d = document.createElement('div'); d.className = kind === 'err' ? 'e' : kind === 'ok' ? 'o' : ''; d.textContent = text; $('#toast').appendChild(d); setTimeout(() => d.remove(), kind === 'err' ? 6000 : 3500); }
+
+// ---------- connection ----------
+const C = { ws: null, url: '', seq: 0, wait: new Map(), token: null, st: null, page: 'overview', data: {} };
+function wsUrl(s) { s = String(s || '').trim(); if (/^wss?:\/\//i.test(s)) return s.replace(/\/+$/, '').replace(/\/(ws|admin)$/, '') + '/admin'; if (/^https?:\/\//i.test(s)) { const u = new URL(s); return (u.protocol === 'https:' ? 'wss://' : 'ws://') + u.host + '/admin'; } return (location.protocol === 'https:' ? 'wss://' : 'ws://') + s.replace(/\/+$/, '') + '/admin'; }
+function connect(url) {
+  return new Promise((res, rej) => {
+    let ws; try { ws = new WebSocket(url); } catch (e) { rej(new Error('That address does not work.')); return; }
+    C.ws = ws; C.url = url; let opened = false;
+    ws.onopen = () => { opened = true; res(); };
+    ws.onerror = () => { if (!opened) rej(new Error("Can't reach the server at that address.")); };
+    ws.onclose = () => { if (C.ws !== ws) return; C.ws = null; for (const w of C.wait.values()) w.rej(new Error('Disconnected')); C.wait.clear(); if (C.token) { toast('Connection lost. Reconnecting…', 'err'); setTimeout(reconnect, 2000); } };
+    ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (er) { return; } const w = C.wait.get(m.re); if (w) { C.wait.delete(m.re); w.res(m); } };
+  });
+}
+async function reconnect() { try { await connect(C.url); const r = await call('resume', { token: C.token }); if (r.t !== 'loginOk') { C.token = null; showLogin('Please log in again.'); return; } toast('Reconnected.', 'ok'); refresh(); } catch (e) { setTimeout(reconnect, 4000); } }
+function call(t, o) { return new Promise((res, rej) => { if (!C.ws || C.ws.readyState !== 1) { rej(new Error('Not connected.')); return; } const rid = ++C.seq; C.wait.set(rid, { res, rej }); C.ws.send(JSON.stringify(Object.assign({ t, rid }, o || {}))); setTimeout(() => { if (C.wait.has(rid)) { C.wait.delete(rid); rej(new Error('The server did not answer.')); } }, 15000); }); }
+async function act(t, o, quiet) { try { const r = await call(t, o); if (r.t === 'err') { toast(r.text, 'err'); if (r.mustChange) showSetPw(); return null; } if (!quiet && r.text) toast(r.text, 'ok'); return r; } catch (e) { toast(e.message, 'err'); return null; } }
+
+// ---------- login ----------
+function showLogin(msg) {
+  const defSrv = saved.server || (location.protocol.startsWith('http') ? location.host : '');
+  root.innerHTML = '<div class="login"><div class="card"><h1>🐀 Rat Catchers<br><small style="font-size:15px;font-weight:600;color:var(--muted)">Owner App</small></h1>' +
+    (msg ? '<div class="warnbox">' + esc(msg) + '</div>' : '') +
+    '<label>Server address<input id="srv" value="' + esc(defSrv) + '" placeholder="localhost:8787"></label>' +
+    '<label>Admin password<input id="pw" type="password" autocomplete="current-password" placeholder="1111 the first time"></label>' +
+    '<label>Owner key<input id="key" type="password" autocomplete="off" value="' + esc(saved.key || '') + '" placeholder="from the file owner.key"></label>' +
+    '<label class="row"><input type="checkbox" id="rem" ' + (saved.key ? 'checked' : '') + ' style="width:auto"> Remember the server and owner key on this computer</label>' +
+    '<button class="p" id="go">Log in</button>' +
+    '<p class="muted" style="margin:0">You need both the admin password and the owner key. The key is printed in the server window when it starts and saved in <b>data/owner.key</b> next to the server. Keep it secret: the password alone never gives admin access.</p></div></div>';
+  const go = async () => {
+    const srv = $('#srv').value.trim(), pw = $('#pw').value, key = $('#key').value.trim();
+    if (!srv || !pw || !key) { toast('Fill in the server, the password and the owner key.', 'err'); return; }
+    $('#go').disabled = true;
+    try { await connect(wsUrl(srv)); const r = await call('login', { pw, key }); if (r.t !== 'loginOk') throw new Error(r.text || 'Login failed.');
+      C.token = r.token; saved.server = srv; if ($('#rem').checked) saved.key = key; else delete saved.key; keep();
+      if (r.mustChange) showSetPw(); else start(); }
+    catch (e) { toast(e.message, 'err'); $('#go').disabled = false; try { C.ws && C.ws.close(); } catch (er) {} C.ws = null; }
+  };
+  $('#go').onclick = go; for (const i of root.querySelectorAll('input')) i.onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+function showSetPw() {
+  root.innerHTML = '<div class="login"><div class="card"><h1>Choose a new admin password</h1><p class="muted" style="margin:0">The starting password 1111 has to be changed before you can do anything else. Use at least 8 characters.</p>' +
+    '<label>New password<input id="p1" type="password" autocomplete="new-password"></label><label>Type it again<input id="p2" type="password" autocomplete="new-password"></label><button class="p" id="go">Save password</button></div></div>';
+  $('#go').onclick = async () => { const a = $('#p1').value, b = $('#p2').value; if (a !== b) { toast('The two passwords are different.', 'err'); return; } const r = await act('setpw', { pw: a }); if (r && r.pwChanged) start(); };
+}
+
+// ---------- the app ----------
+const PAGES = [['overview', '📊 Overview'], ['events', '🌦️ Events & weather'], ['announce', '📢 Announcements'], ['spawn', '🐀 Spawn rats'], ['players', '👥 Players & gifts'], ['economy', '💰 Earnings'], ['luck', '🍀 Luck & spawning'], ['shop', '🥚 Eggs, shop & limited'], ['advanced', '🧰 Advanced'], ['security', '🔒 Security']];
+let timer = 0;
+function start() {
+  root.innerHTML = '<div class="app"><nav><div class="brand">🐀 Rat Catchers<small>Owner App · ' + esc(C.url.replace(/^wss?:\/\//, '').replace(/\/admin$/, '')) + '</small></div>' + PAGES.map(p => '<button data-p="' + p[0] + '">' + p[1] + '</button>').join('') + '<div class="foot">Every change is saved on the server, applies to every room at once, and is written to the audit log.</div></nav><main id="main"></main></div>';
+  root.querySelector('nav').onclick = e => { const b = e.target.closest('[data-p]'); if (b) { C.page = b.dataset.p; draw(); } };
+  refresh(); clearInterval(timer); timer = setInterval(() => { if (C.page === 'overview' || C.page === 'events') refresh(true); }, 5000);
+}
+async function refresh(soft) { const r = await act('state', {}, true); if (!r) return; C.st = r; if (!soft || !document.activeElement || !document.activeElement.closest('main') || document.activeElement.tagName === 'BUTTON') draw(); }
+function draw() {
+  for (const b of root.querySelectorAll('nav [data-p]')) b.classList.toggle('on', b.dataset.p === C.page);
+  const m = $('#main'); if (!m || !C.st) return; const sc = m.scrollTop;
+  m.innerHTML = ({ overview, events, announce, spawn, players, economy, luck, shop, advanced, security }[C.page])(C.st);
+  m.scrollTop = sc; wire(m);
+}
+const rid = () => 'x' + Math.random().toString(36).slice(2, 8);
+const ACTS = {};
+function btn(label, f, cls) { const id = rid(); ACTS[id] = f; return '<button data-a="' + id + '" class="' + (cls || '') + '">' + label + '</button>'; }
+function wire(m) { m.onclick = e => { const b = e.target.closest('[data-a]'); if (b && ACTS[b.dataset.a]) ACTS[b.dataset.a](b); }; }
+const val = id => { const e = document.getElementById(id); return e ? (e.type === 'checkbox' ? e.checked : e.value) : null; };
+const RAR = [['common', 'Common', '#c3cad6'], ['uncommon', 'Uncommon', '#5fdc6a'], ['rare', 'Rare', '#45b0ff'], ['superrare', 'Super Rare', '#b876ff'], ['legendary', 'Legendary', '#ffb22e'], ['mythical', 'Mythical', '#ff4f6e'], ['apocryphal', 'Apocryphal', '#fff3c4'], ['omega', 'Omega', '#9b5cff'], ['godlike', 'God-like', '#ffe066'], ['secret', 'Secret', '#ff5cf0']];
+const EVN = { rain: 'Rain (30% Rain mutation)', snow: 'Snow (30% Snow mutation)', thunder: 'Thunderstorm (30% Thunder)', dj: 'DJ Event (35% disco ball)', heaven: "Heaven's Event (more high rarities)", goldmoon: 'Gold Moon (80% Gold)', diamond: 'Diamond Event (50% Diamond)', rainbow: 'Rainbow Event (30% Rainbow)', ultra: 'ULTRA (every event at once)' };
+const FIELDS = [['meadow', 'Starter Meadow'], ['clover', 'Clover Fields'], ['mushroom', 'Mushroom Forest'], ['crystal', 'Crystal Caves'], ['frozen', 'Frozen Valley'], ['lava', 'Lava Lands'], ['heaven', "Heaven's Garden"], ['omega', 'Omega Dimension'], ['secret', 'Secret Realm'], ['reborn', 'Reborn Sanctuary']];
+
+function overview(s) {
+  const t = Date.now(), ev = s.events;
+  return '<div class="grid"><div class="cols">' +
+    '<div class="card"><h3>Right now</h3><div class="row" style="gap:24px"><div><div class="big">' + s.online + '</div><span class="muted">players online</span></div><div><div class="big">' + s.rooms.length + '</div><span class="muted">rooms</span></div><div><div class="big">' + ev.active.length + (ev.inv ? '+1' : '') + '</div><span class="muted">events running</span></div></div></div>' +
+    '<div class="card"><h3>Events</h3>' + (ev.active.length || ev.inv ? (ev.inv ? '<div><span class="tag" style="background:#ffd0d6">Invasion</span> ends in ' + dur((ev.inv.ends - ev.srv) / 1000) + '</div>' : '') + ev.active.map(e => '<div><span class="tag">' + esc(EVN[e.id] || e.id) + '</span> ends in ' + dur((e.ends - ev.srv) / 1000) + (e.by ? ' <span class="muted">by ' + esc(e.by) + '</span>' : '') + '</div>').join('') : '<span class="muted">Nothing running.</span>') + '<div class="muted" style="margin-top:6px">Weather: ' + esc(ev.weather) + (ev.forced ? ' (set by you)' : '') + '</div></div>' +
+    '<div class="card"><h3>Server</h3><div class="row">' + btn('💾 Back up now', () => act('backup')) + btn('🔄 Restart…', () => askDelay('restart'), 'y') + btn('⏻ Shut down…', () => askDelay('shutdown'), 'bad') + '</div><p class="muted">Players get a warning banner first and everything is saved. Restart only works when the server was started normally (it restarts itself).</p><div class="muted">Backups (newest last): ' + (s.backups.length ? s.backups.map(esc).join(', ') : 'none yet') + '</div></div></div>' +
+    '<div class="card"><h3>Rooms</h3><table><tr><th>Code</th><th>Name</th><th>Type</th><th>Players</th><th>Where</th></tr>' + s.rooms.map(r => '<tr><td><b>' + esc(r.code) + '</b></td><td>' + esc(r.name) + '</td><td>' + (r.pub ? 'Public' : 'Private') + '</td><td>' + r.n + '/' + r.max + '</td><td class="muted">' + (Object.entries(r.areas).map(([k, n]) => esc(k) + ': ' + n).join(', ') || '—') + '</td></tr>').join('') + '</table></div>' +
+    '<div class="cols"><div class="card"><h3>Recent announcements</h3>' + (s.ann.length ? s.ann.slice().reverse().map(a => '<div style="margin-bottom:6px"><span class="dot" style="background:' + esc(a.col || '#fff') + '"></span><b>' + esc(a.kind) + '</b> ' + esc(a.text) + ' <span class="muted">' + new Date(a.at).toLocaleTimeString() + '</span></div>').join('') : '<span class="muted">None yet.</span>') + '</div>' +
+    '<div class="card"><h3>Audit log</h3><div style="max-height:320px;overflow:auto">' + s.audit.map(a => '<div style="font-size:13px;margin-bottom:4px"><span class="muted">' + new Date(a.at).toLocaleString() + '</span> <b>' + esc(a.action) + '</b> ' + esc(a.who) + ' <span class="muted">' + esc(String(a.detail).slice(0, 140)) + '</span></div>').join('') + '</div></div></div></div>';
+}
+function askDelay(kind) { const s = prompt((kind === 'restart' ? 'Restart' : 'Shut down') + ' the server in how many seconds? (5 to 600)', '30'); if (s == null) return; const n = Math.max(5, Math.min(600, parseInt(s, 10) || 30)); if (!confirm('Really ' + (kind === 'restart' ? 'restart' : 'shut down') + ' the server in ' + n + ' seconds?')) return; act(kind, { delay: n }); }
+
+function events(s) {
+  const ev = s.events, on = id => ev.active.find(e => e.id === id), cfg = s.cfg, dflt = { rain: 600, snow: 600, thunder: 600, dj: 600, heaven: 600, goldmoon: 480, diamond: 480, rainbow: 480, ultra: 300 };
+  return '<div class="grid"><div class="card"><h3>Global events</h3><p class="muted" style="margin-top:0">Events reach every room. Starting a running event again extends it.</p><div class="grid">' +
+    Object.keys(EVN).map(id => { const a = on(id), d = (cfg.eventDur && cfg.eventDur[id]) || dflt[id]; return '<div class="ev' + (a ? ' on' : '') + '"><div><b>' + esc(EVN[id]) + '</b><div class="muted">' + (a ? 'Running, ends in ' + dur((a.ends - ev.srv) / 1000) : 'Off') + ' · normal length ' + dur(d) + '</div></div>' +
+      '<div class="row"><input type="number" min="30" max="86400" id="d_' + id + '" value="' + d + '" title="seconds"><span class="muted">s</span></div><div class="row">' + btn(a ? 'Extend' : 'Start', () => act('event', { id, on: 1, dur: +val('d_' + id) }).then(refresh), 'ok') + (a ? btn('Stop', () => act('event', { id, on: 0 }).then(refresh), 'bad') : '') + btn('Save as length', () => act('eventDur', { id, dur: +val('d_' + id) }).then(refresh)) + '</div></div>'; }).join('') + '</div></div>' +
+    '<div class="cols"><div class="card"><h3>Weather</h3><div class="row">' + [['auto', 'Follow events'], ['clear', '☀️ Clear'], ['rain', '🌧️ Rain'], ['snow', '❄️ Snow'], ['storm', '⛈️ Storm']].map(w => btn(w[1], () => act('weather', { w: w[0] === 'auto' ? null : w[0] }).then(refresh), (ev.forced || 'auto') === w[0] ? 'p' : '')).join('') + '</div><p class="muted">Weather you set here only changes how the sky looks. Mutation chances come from events.</p></div>' +
+    '<div class="card"><h3>Rat invasion</h3><div class="row"><input type="number" id="invd" min="30" max="7200" value="' + (cfg.invasionDur || 240) + '"><span class="muted">seconds</span>' + (ev.inv ? btn('Stop invasion', () => act('invasion', { on: 0 }).then(refresh), 'bad') : btn('Start invasion', () => act('invasion', { on: 1, dur: +val('invd') }).then(refresh), 'ok')) + '</div><p class="muted">Invasions bring many more rats, and exclusive invader rats, to every field.</p></div>' +
+    '<div class="card"><h3>Automatic events</h3>' + fld('autoEvents', 'Start events by themselves', 'bool') + fld('eventEvery.0', 'Shortest wait between events (s)') + fld('eventEvery.1', 'Longest wait between events (s)') + fld('autoInvasions', 'Start invasions by themselves', 'bool') + fld('invasionEvery.0', 'Shortest wait between invasions (s)') + fld('invasionEvery.1', 'Longest wait between invasions (s)') + fld('invasionDur', 'Invasion length (s)') + saveBtn() + '</div></div></div>';
+}
+function announce() {
+  return '<div class="card" style="max-width:720px"><h3>Send an announcement to every room</h3><div class="grid">' +
+    '<label>Type <select id="ak">' + [['normal', 'Normal'], ['event', 'Event'], ['rare', 'Rare discovery'], ['update', 'Update'], ['shutdown', 'Shutdown'], ['giveaway', 'Giveaway']].map(k => '<option value="' + k[0] + '">' + k[1] + '</option>').join('') + '</select></label>' +
+    '<label>Message<textarea id="at" rows="3" maxlength="220" placeholder="Hello catchers!"></textarea></label>' +
+    '<div class="row"><label>Banner colour <input type="color" id="ac" value="#ffd23a"></label><label>Sound <select id="as"><option value="">Default for the type</option><option value="chime">Chime</option><option value="fanfare">Fanfare</option><option value="rare">Sparkle</option><option value="gift">Gift</option><option value="alarm">Alarm</option><option value="siren">Siren</option></select></label><label>Shows for <input type="number" id="ad" min="2" max="60" value="8"> s</label></div>' +
+    '<div>' + btn('📢 Send', () => { const text = val('at').trim(); if (!text) { toast('Write a message first.', 'err'); return; } act('announce', { kind: val('ak'), text, col: val('ac'), sound: val('as') || null, dur: +val('ad') }).then(refresh); }, 'p') + '</div></div></div>';
+}
+function spawn(s) {
+  const sp = s.species.slice().sort((a, b) => RAR.findIndex(r => r[0] === a.r) - RAR.findIndex(r => r[0] === b.r));
+  return '<div class="card" style="max-width:760px"><h3>Spawn rats into fields</h3><p class="muted" style="margin-top:0">Rats only spawn in fields where players are right now. Owner-spawned rats stay twice as long.</p><div class="grid">' +
+    '<label>Rat <select id="ss">' + RAR.map(r => '<optgroup label="' + r[1] + '">' + sp.filter(x => x.r === r[0]).map(x => '<option value="' + x.id + '">' + esc(x.n) + (x.secret ? ' (Secret)' : '') + (x.inv ? ' (Invasion)' : '') + '</option>').join('') + '</optgroup>').join('') + '</select></label>' +
+    '<div class="row"><label>Mutation <select id="sm"><option value="">None</option><option>gold</option><option>diamond</option><option>rainbow</option></select></label><label>Weather <select id="sw"><option value="">None</option><option>rain</option><option>snow</option><option>thunder</option></select></label><label class="row"><input type="checkbox" id="sd" style="width:auto"> Disco ball</label></div>' +
+    '<div class="row"><label>How many <input type="number" id="sn" min="1" max="20" value="1"></label><label>Room <select id="sr"><option value="all">Every room</option>' + s.rooms.map(r => '<option value="' + esc(r.code) + '">' + esc(r.code) + ' (' + r.n + ')</option>').join('') + '</select></label><label>Field <select id="sf"><option value="all">Every field with players</option>' + FIELDS.map(f => '<option value="' + f[0] + '">' + f[1] + '</option>').join('') + '</select></label></div>' +
+    '<label class="row"><input type="checkbox" id="sa" checked style="width:auto"> Announce it to everyone</label>' +
+    '<div>' + btn('🐀 Spawn', () => act('spawn', { sp: val('ss'), mut: val('sm') || null, wx: val('sw') || null, disco: val('sd'), n: +val('sn'), room: val('sr'), area: val('sf'), announce: val('sa') }), 'p') + '</div></div></div>';
+}
+function players(s) {
+  const P = C.data.players || [], sel = C.data.sel;
+  return '<div class="grid"><div class="card"><h3>Find players</h3><div class="row"><input id="pq" placeholder="Name (leave empty for recent players)" value="' + esc(C.data.q || '') + '" style="flex:1">' + btn('Search', () => { C.data.q = val('pq'); act('players', { q: C.data.q }, true).then(r => { if (r) { C.data.players = r.l; draw(); } }); }, 'p') + '</div>' +
+    (P.length ? '<table style="margin-top:10px"><tr><th>Name</th><th>Money</th><th>Level</th><th>Rebirths</th><th>Status</th><th></th></tr>' + P.map(p => '<tr><td><b>' + esc(p.name) + '</b></td><td>' + fmt(p.money) + '</td><td>' + p.level + '</td><td>' + p.rebirths + '</td><td>' + (p.online ? '<span class="tag" style="background:#d6f5d9">online</span>' : '<span class="muted">last seen ' + (p.last_seen ? new Date(p.last_seen).toLocaleString() : '—') + '</span>') + '</td><td>' + btn('Open', () => act('player', { id: p.id }, true).then(r => { if (r) { C.data.sel = r.p; draw(); } })) + '</td></tr>').join('') + '</table>' : '<p class="muted">Search to see players.</p>') + '</div>' +
+    (sel ? '<div class="card"><h3>' + esc(sel.name) + (sel.online ? ' <span class="tag" style="background:#d6f5d9">online</span>' : '') + (sel.banned ? ' <span class="tag" style="background:#ffd6d6">banned</span>' : '') + '</h3><div class="kv"><b>Money</b><span>' + fmt(sel.money) + ' (' + fmt(sel.mps) + '/s)</span><b>Level</b><span>' + sel.level + ' · ' + sel.rebirths + ' rebirths</span><b>Rats</b><span>' + sel.rats + ' owned · ' + sel.caught + ' caught · ' + sel.trades + ' trades</span></div>' +
+      '<h3 style="margin-top:14px">Give</h3><div class="row"><label>Money <input type="number" id="gm" value="1000000"></label>' + btn('Give money', () => act('give', { player: sel.id, money: +val('gm') }).then(() => reopen(sel.id)), 'ok') + '</div>' +
+      '<div class="row" style="margin-top:8px"><select id="gk"><option value="potion">Potion</option><option value="egg">Egg</option><option value="rod">Rod</option><option value="cos">Cosmetic</option><option value="rat">Rat</option><option value="box">Mystery Boxes</option><option value="tokens">Event tokens</option><option value="title">Title</option></select><input id="gi" placeholder="id, e.g. ultraluck, egg25, omega, goldaura, ratking, or a title" style="flex:1"><input type="number" id="gn" min="1" max="999" value="1" style="width:80px">' +
+      btn('Give item', () => act('give', { player: sel.id, kind: val('gk'), id: val('gi').trim(), n: +val('gn') }).then(() => reopen(sel.id)), 'ok') + '</div><p class="muted">Item ids: potions luck, superluck, ultraluck, money, supermoney, speed, catch, mutation · eggs egg2, egg5, eggltd, egg25 · rods wood … omega · rats use the ids in Spawn rats.</p>' +
+      '<div class="row" style="margin-top:8px">' + (sel.banned ? btn('Unban', () => act('ban', { id: sel.id, v: 0 }).then(() => reopen(sel.id))) : btn('Ban player', () => { if (confirm('Ban ' + sel.name + '? They are kicked and can’t log in.')) act('ban', { id: sel.id, v: 1 }).then(() => reopen(sel.id)); }, 'bad')) + '</div></div>' : '') + '</div>';
+}
+function reopen(id) { act('player', { id }, true).then(r => { if (r) { C.data.sel = r.p; draw(); } }); }
+
+// ---------- settings forms: each field edits one value of the live config ----------
+const PEND = {};
+function get(o, path) { return path.split('.').reduce((a, k) => a == null ? a : a[k], o); }
+function fld(path, label, type, note) {
+  const v = PEND[path] != null ? PEND[path] : get(C.st.cfg, path), id = 'f_' + path.replace(/[^a-z0-9]/gi, '_');
+  const inp = type === 'bool' ? '<input type="checkbox" id="' + id + '" data-path="' + path + '" data-type="bool" ' + (v ? 'checked' : '') + ' style="width:auto">' : type === 'date' ? '<input type="datetime-local" id="' + id + '" data-path="' + path + '" data-type="date" value="' + (v ? new Date(v - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '') + '">' : type === 'text' ? '<input id="' + id + '" data-path="' + path + '" data-type="text" value="' + esc(v == null ? '' : v) + '" style="width:220px">' : '<input type="number" step="any" id="' + id + '" data-path="' + path + '" value="' + (v == null ? '' : v) + '">';
+  return '<div class="field"><label for="' + id + '">' + label + (note ? '<small>' + note + '</small>' : '') + '</label>' + inp + '</div>';
+}
+function setPath(o, path, v) { const k = path.split('.'); let c = o; for (let i = 0; i < k.length - 1; i++) { const nx = k[i + 1]; if (c[k[i]] == null) c[k[i]] = /^\d+$/.test(nx) ? [] : {}; c = c[k[i]]; } c[k[k.length - 1]] = v; }
+function saveBtn(label) { return '<div style="margin-top:10px">' + btn(label || '💾 Save these settings', b => saveForm(b.closest('.card')), 'p') + '</div>'; }
+function saveForm(card) {
+  const patch = {}; let n = 0;
+  for (const i of card.querySelectorAll('[data-path]')) {
+    const path = i.dataset.path, t = i.dataset.type; let v;
+    if (t === 'bool') v = i.checked; else if (t === 'date') v = i.value ? new Date(i.value).getTime() : 0; else if (t === 'text') v = i.value; else { if (i.value === '') continue; v = Number(i.value); if (!isFinite(v)) { toast('“' + i.value + '” is not a number.', 'err'); return; } }
+    const cur = get(C.st.cfg, path); if (JSON.stringify(cur) === JSON.stringify(v)) continue;
+    // arrays (like waits) are sent whole
+    const parts = path.split('.'); if (/^\d+$/.test(parts[parts.length - 1])) { const ap = parts.slice(0, -1).join('.'), arr = (patch.__arr = patch.__arr || {}); if (!arr[ap]) arr[ap] = (get(C.st.cfg, ap) || []).slice(); arr[ap][+parts[parts.length - 1]] = v; n++; continue; }
+    setPath(patch, path, v); n++;
+  }
+  if (patch.__arr) { for (const ap in patch.__arr) setPath(patch, ap, patch.__arr[ap]); delete patch.__arr; }
+  if (!n) { toast('Nothing changed.'); return; }
+  act('cfg', { patch }).then(r => { if (r) refresh(); });
+}
+function economy(s) {
+  const sp = s.species.filter(x => x.r === 'godlike' || x.r === 'secret' || x.inv || x.own), all = s.species;
+  return '<div class="grid"><div class="cols"><div class="card"><h3>Base earnings per rarity ($ per second)</h3>' + RAR.map(r => fld('rarityEarn.' + r[0], '<span class="dot" style="background:' + r[2] + '"></span>' + r[1])).join('') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Multipliers</h3>' + ['gold', 'diamond', 'rainbow', 'rain', 'snow', 'thunder', 'disco'].map(k => fld('mutMult.' + k, k[0].toUpperCase() + k.slice(1) + ' mutation ×')).join('') + fld('levelMult', 'Each rat level adds', null, '0.1 = +10% per level') + fld('evoMult', 'Each evolution stage ×') + fld('rebirthEarn', 'Each rebirth adds earnings', null, '0.05 = +5%') + fld('globalEarn', 'Server-wide earnings ×') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Potions</h3>' + ['luck', 'superluck', 'ultraluck', 'money', 'supermoney', 'speed', 'catch', 'mutation'].map(k => fld('potions.' + k + '.mult', k + ' ×') + fld('potions.' + k + '.dur', k + ' lasts (s)') + fld('potions.' + k + '.price', k + ' price ($)')).join('') + fld('potionMax', 'A potion can stack up to ×its time') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Offline, selling and levels</h3>' + fld('offlineRate', 'Offline earnings rate', null, '0.1 = 10% of the online rate') + fld('offlineMaxHours', 'Offline earnings stop after (hours)') + fld('sellSeconds', 'A rat sells for this many seconds of its earnings') + fld('ratMaxLevel', 'Starting rat level cap') + fld('ratCapStep', 'Each cap upgrade adds levels') + fld('ratCapMax', 'Highest possible level cap') + fld('rebirthLevel', 'Level needed for the first rebirth') + fld('rebirthStep', 'Extra levels needed per rebirth') + fld('rebirthResetsMoney', 'Rebirth resets money', 'bool') + saveBtn() + '</div></div>' +
+    '<div class="card"><h3>Earnings of individual rats</h3><p class="muted" style="margin-top:0">God-like and Secret rats each have their own value (God-like rats are $1M–$10M by default). You can give any rat its own value; leave a box empty to use its rarity’s base.</p>' +
+    '<table><tr><th>Rat</th><th>Rarity</th><th>Earns now</th><th>Own value ($/s)</th></tr>' + all.map(x => '<tr><td>' + esc(x.n) + (x.secret ? ' <span class="tag">Secret</span>' : '') + (x.inv ? ' <span class="tag">Invasion</span>' : '') + '</td><td>' + x.r + '</td><td>' + fmt(x.earn) + '/s</td><td><input type="number" step="any" data-sp="' + x.id + '" value="' + (s.cfg.speciesEarn[x.id] != null ? s.cfg.speciesEarn[x.id] : '') + '" placeholder="rarity base"></td></tr>').join('') + '</table>' +
+    '<div style="margin-top:10px">' + btn('💾 Save rat values', b => { const patch = { speciesEarn: {} }; for (const i of b.closest('.card').querySelectorAll('[data-sp]')) { const cur = s.cfg.speciesEarn[i.dataset.sp]; const v = i.value === '' ? null : Number(i.value); if (v === null && cur == null) continue; if (v !== null && !isFinite(v)) { toast('Bad number for ' + i.dataset.sp, 'err'); return; } if (v === cur) continue; patch.speciesEarn[i.dataset.sp] = v; } if (!Object.keys(patch.speciesEarn).length) { toast('Nothing changed.'); return; } act('cfg', { patch }).then(refresh); }, 'p') + '</div><p class="muted">Clearing a value sends “null”, which puts that rat back on its rarity’s base. ' + (sp.length ? 'Rats with their own value now: ' + sp.filter(x => x.own).map(x => esc(x.n)).join(', ') + '.' : '') + '</p></div></div>';
+}
+function luck(s) {
+  return '<div class="grid"><div class="cols"><div class="card"><h3>Luck</h3>' + fld('globalLuck', 'Server-wide luck ×', null, 'More luck = rarer rats everywhere') + fld('rebirthLuck', 'Each rebirth adds luck', null, '0.1 = +10%') + fld('heavenBoost', "Heaven's Event boost for Legendary and up ×") + fld('catchBonus', 'Extra catch chance for everyone', null, '0.05 = +5%') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Rarity spawn boost</h3><p class="muted" style="margin-top:0">Multiplies how often each rarity appears in every field.</p>' + RAR.map(r => fld('rarityBoost.' + r[0], '<span class="dot" style="background:' + r[2] + '"></span>' + r[1] + ' ×')).join('') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Natural mutation chances</h3><p class="muted" style="margin-top:0">Chance outside events (0.01 = 1%). Events raise these.</p>' + fld('natural.gold', 'Gold') + fld('natural.diamond', 'Diamond') + fld('natural.rainbow', 'Rainbow') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Fields</h3>' + fld('maxRatsPerField', 'Most rats in a field at once') + fld('spawnEvery', 'Seconds between new rats') + fld('chestEvery.0', 'Shortest wait for a treasure chest (s)') + fld('chestEvery.1', 'Longest wait for a treasure chest (s)') + fld('maxChests', 'Most chests in a field') + saveBtn() + '</div></div>' +
+    '<div class="card"><h3>Rarity weights per field</h3><p class="muted" style="margin-top:0">How likely each rarity is in each field before luck (Common → Secret). Secret rats never spawn from these weights; they come from events and the owner.</p><table><tr><th>Field</th>' + RAR.map(r => '<th>' + r[1] + '</th>').join('') + '</tr>' + FIELDS.map(f => '<tr><td><b>' + f[1] + '</b></td>' + RAR.map((r, i) => '<td><input type="number" step="any" style="width:70px" data-path="fieldWeights.' + f[0] + '.' + i + '" value="' + ((s.cfg.fieldWeights[f[0]] || [])[i] || 0) + '"></td>').join('') + '</tr>').join('') + '</table>' + saveBtn('💾 Save field weights') + '</div></div>';
+}
+function shop(s) {
+  const cfg = s.cfg, eggs = [['egg2', '$2 Egg'], ['egg5', '$5 Egg'], ['eggltd', 'Limited-Time Egg'], ['egg25', '$25 Egg']];
+  return '<div class="grid"><div class="cols"><div class="card"><h3>Limited-time items</h3>' + fld('ltdEgg.on', 'Limited-Time Egg is for sale', 'bool') + fld('ltdEgg.ends', 'It ends at', 'date', 'Empty = no end') + fld('promo.on', 'Promotion is running', 'bool') + fld('promo.ends', 'The promotion ends at', 'date', 'Empty = no end') + fld('promo.items.0', 'Promoted cosmetic id', 'text', 'e.g. discolights') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Prices</h3>' + fld('mysteryPrice', 'Mystery Box ($)') + ['copper', 'silver', 'golden', 'diamond', 'rainbow', 'heaven', 'omega'].map(r => fld('rods.' + r + '.price', r + ' rod ($)')).join('') + saveBtn() + '</div>' +
+    '<div class="card"><h3>Rods</h3>' + ['wood', 'copper', 'silver', 'golden', 'diamond', 'rainbow', 'heaven', 'omega'].map(r => fld('rods.' + r + '.luck', r + ' luck ×') + fld('rods.' + r + '.speed', r + ' reel speed ×') + fld('rods.' + r + '.success', r + ' catch chance', null, '0.75 = 75%')).join('') + saveBtn() + '</div></div>' +
+    '<div class="card"><h3>Eggs: prices and odds</h3><p class="muted" style="margin-top:0">Odds are weights; players see them as percentages of the total. Set a rarity to 0 to remove it from an egg.</p><table><tr><th>Egg</th><th>Price ($)</th>' + RAR.map(r => '<th>' + r[1] + '</th>').join('') + '</tr>' + eggs.map(e => '<tr><td><b>' + e[1] + '</b></td><td><input type="number" step="any" style="width:120px" data-path="eggs.' + e[0] + '.price" value="' + cfg.eggs[e[0]].price + '"></td>' + RAR.map(r => '<td><input type="number" step="any" style="width:64px" data-path="eggs.' + e[0] + '.odds.' + r[0] + '" value="' + (cfg.eggs[e[0]].odds[r[0]] || 0) + '"></td>').join('') + '</tr>').join('') + '</table>' + saveBtn('💾 Save eggs') + '</div></div>';
+}
+function advanced(s) {
+  return '<div class="grid"><div class="card"><h3>Every setting as JSON</h3><p class="muted" style="margin-top:0">This is the full live configuration. Edit carefully; it is checked as JSON before saving. Only the values you change are stored as overrides.</p><textarea id="cj" rows="24">' + esc(JSON.stringify(s.cfg, null, 2)) + '</textarea><div class="row" style="margin-top:8px">' +
+    btn('💾 Save JSON', () => { let o; try { o = JSON.parse(val('cj')); } catch (e) { toast('That is not valid JSON: ' + e.message, 'err'); return; } const d = diff(s.cfg, o); if (d === undefined) { toast('Nothing changed.'); return; } act('cfg', { patch: d }).then(refresh); }, 'p') + btn('↩️ Reset everything to defaults', () => { if (confirm('Put every setting back to the defaults?')) act('cfgReset').then(refresh); }, 'bad') + '</div></div></div>';
+}
+// only what changed: objects are compared key by key, arrays and plain values as a whole
+function diff(a, b) {
+  if (b && typeof b === 'object' && !Array.isArray(b) && a && typeof a === 'object' && !Array.isArray(a)) { const o = {}; let n = 0; for (const k of Object.keys(b)) { const d = diff(a[k], b[k]); if (d !== undefined) { o[k] = d; n++; } } return n ? o : undefined; }
+  return JSON.stringify(a) === JSON.stringify(b) ? undefined : b;
+}
+function security(s) {
+  return '<div class="grid"><div class="card" style="max-width:640px"><h3>Admin password</h3><div class="grid"><input id="np1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><input id="np2" type="password" placeholder="Type it again" autocomplete="new-password">' + btn('Change password', () => { if (val('np1') !== val('np2')) { toast('The two passwords are different.', 'err'); return; } act('setpw', { pw: val('np1') }); }, 'p') + '</div></div>' +
+    '<div class="card" style="max-width:640px"><h3>Owner key</h3><p>Logging in needs the password <b>and</b> the owner key. The key lives in this file on the server computer:</p><p><code>' + esc(s.keyFile) + '</code></p><p class="muted">To make a new key, stop the server, delete that file and start the server again; it prints the new key. After 5 wrong tries from one address, logins from it are blocked for 15 minutes. Every action here is written to the audit log.</p>' +
+    btn('Log out of the owner app', () => { C.token = null; try { C.ws.close(); } catch (e) {} showLogin(); }) + '</div></div>';
+}
+showLogin();
+})();
+</script>
+</body>
+</html>

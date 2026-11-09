@@ -1,0 +1,7 @@
+{
+  "name": "rat-catchers-server",
+  "private": true,
+  "description": "The RAT CATCHERS online server (an ORION Original). Plain Node.js, no packages.",
+  "scripts": { "start": "node server/main.js" },
+  "engines": { "node": ">=22.13" }
+}

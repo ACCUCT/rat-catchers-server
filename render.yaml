@@ -1,0 +1,17 @@
+# One-click setup on Render (free plan). Players' saves stay on their own devices,
+# so it doesn't matter that a free server forgets everything when it sleeps or restarts.
+services:
+  - type: web
+    name: rat-catchers-server
+    runtime: node
+    plan: free
+    buildCommand: echo "Nothing to build"
+    startCommand: node server/main.js
+    healthCheckPath: /api/status
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: RC_DEVICE_SAVES
+        value: "1"
+      - key: RC_OWNER_KEY
+        generateValue: true
