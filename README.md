@@ -12,13 +12,13 @@ without a server) when it isn't.
   and the server sends it back every 8 seconds. A free server that sleeps or restarts with an empty disk loses nothing.
 * **It sleeps** after 15 minutes with nobody playing. The first player's game wakes it (about a minute) and moves
   over by itself when it's ready.
-* Leaderboards, the admin password (back to `1111`, change it at first login) and owner settings start fresh after
-  each restart.
+* Leaderboards start fresh after each restart.
 
 ## Owner app
 
-Open `https://<your-address>/admin`. It needs the admin password **and** the owner key: on Render, open the
-service → **Environment** → `RC_OWNER_KEY`.
+Open `https://<your-address>/admin` and paste your owner key (no password on a free host: the key is a long random
+secret). On Render: **rat-catchers-server → Environment → `RC_OWNER_KEY`** (click the eye to show it). Your settings
+are kept in your browser too and put back automatically after the free server restarts.
 
 ## Running it elsewhere
 

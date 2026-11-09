@@ -11,7 +11,11 @@ const PL = require('./player.js');
 function create(G, dataDir) {
   const keyFile = path.join(dataDir, 'owner.key');
   if (!fs.existsSync(keyFile)) fs.writeFileSync(keyFile, crypto.randomBytes(24).toString('base64url') + '\n', { mode: 0o600 });
-  const ownerKey = (process.env.RC_OWNER_KEY || '').trim().length >= 16 ? process.env.RC_OWNER_KEY.trim() : fs.readFileSync(keyFile, 'utf8').trim();
+  // On a host like Render the key is a long random secret in the host's settings (RC_OWNER_KEY), and the host forgets
+  // everything else on restart, so the key alone logs in (a 256-bit secret is safer than any password).
+  const keyOnly = (process.env.RC_OWNER_KEY || '').trim().length >= 16;
+  const ownerKey = keyOnly ? process.env.RC_OWNER_KEY.trim() : fs.readFileSync(keyFile, 'utf8').trim();
+  G.keyOnly = keyOnly;
   let A = G.db.kvGet('admin');
   const ph = (pw, salt) => crypto.scryptSync(String(pw), salt, 64, { N: 16384, r: 8, p: 1 }).toString('hex');
   if (!A) { const salt = crypto.randomBytes(16).toString('hex'); A = { salt, hash: ph('1111', salt), mustChange: true }; G.db.kvSet('admin', A); }
@@ -57,7 +61,7 @@ function create(G, dataDir) {
   }
 
   const C = {}; // admin commands
-  C.state = () => ({ t: 'state', online: [...G.sessions].filter(s => s.P).length, rooms: [...G.rooms.values()].map(r => Object.assign(G.roomInfo(r), { areas: Object.fromEntries(Object.entries(r.areas).filter(([, a]) => a.players.size).map(([k, a]) => [k, a.players.size])) })),
+  C.state = () => ({ t: 'state', keyOnly, over: G.cfgOver || {}, online: [...G.sessions].filter(s => s.P).length, rooms: [...G.rooms.values()].map(r => Object.assign(G.roomInfo(r), { areas: Object.fromEntries(Object.entries(r.areas).filter(([, a]) => a.players.size).map(([k, a]) => [k, a.players.size])) })),
     events: G.events.state(), cfg: G.cfg, defaults: D.DEFAULT_CONFIG, species: D.SPECIES.map(s => ({ id: s.id, n: s.n, r: s.r, earn: D.baseEarn(G.cfg, s.id), own: G.cfg.speciesEarn[s.id] != null, secret: !!s.secret, inv: !!s.inv })),
     ann: G.events.all().slice(-15), audit: G.db.st.auditList.all(40), backups: G.listBackups(), keyFile: G.ownerKeyFile, ver: D.VERSION });
   C.event = (m, who) => { const ok = m.on ? G.events.start(m.id, m.dur | 0, who) : G.events.stop(m.id, who); audit(who, m.on ? 'event start' : 'event stop', m); return { t: 'ok', text: ok ? 'Done.' : 'Unknown event.' }; };
@@ -119,14 +123,14 @@ function create(G, dataDir) {
       if (m.t === 'login') {
         const f = fails.get(ws.ip) || { n: 0, until: 0 };
         if (f.until > Date.now()) return reply({ t: 'loginErr', text: 'Too many wrong tries. Wait ' + Math.ceil((f.until - Date.now()) / 60000) + ' minutes.' });
-        const okKey = eq(m.key || '', ownerKey), okPw = eq(ph(m.pw || '', A.salt), A.hash);
-        if (!okKey || !okPw) { f.n++; if (f.n >= 5) { f.until = Date.now() + 15 * 60000; f.n = 0; } fails.set(ws.ip, f); audit('?' + ws.ip, 'failed admin login', { key: okKey, pw: okPw }); return reply({ t: 'loginErr', text: 'The password or the owner key is wrong.' }); }
+        const okKey = eq(String(m.key || '').replace(/\s+/g, ''), ownerKey.replace(/\s+/g, '')), okPw = keyOnly || eq(ph(m.pw || '', A.salt), A.hash);
+        if (!okKey || !okPw) { f.n++; if (f.n >= 5) { f.until = Date.now() + 15 * 60000; f.n = 0; } fails.set(ws.ip, f); audit('?' + ws.ip, 'failed admin login', { key: okKey, pw: okPw }); return reply({ t: 'loginErr', text: keyOnly ? 'That owner key is wrong. Copy it again from your host’s settings (RC_OWNER_KEY).' + (f.n >= 3 ? ' After 5 wrong tries, logging in is blocked for 15 minutes.' : '') : 'The password or the owner key is wrong.' }); }
         fails.delete(ws.ip); authed = true; const tok = crypto.randomBytes(24).toString('hex'); sessions.set(tok, { until: Date.now() + 12 * 3600e3 });
-        audit(who, 'admin login', {}); return reply({ t: 'loginOk', token: tok, mustChange: !!A.mustChange });
+        audit(who, 'admin login', {}); return reply({ t: 'loginOk', token: tok, mustChange: !keyOnly && !!A.mustChange, keyOnly });
       }
-      if (m.t === 'resume') { const se = sessions.get(m.token || ''); if (se && se.until > Date.now()) { authed = true; return reply({ t: 'loginOk', token: m.token, mustChange: !!A.mustChange }); } return reply({ t: 'loginErr', text: 'Please log in again.' }); }
+      if (m.t === 'resume') { const se = sessions.get(m.token || ''); if (se && se.until > Date.now()) { authed = true; return reply({ t: 'loginOk', token: m.token, mustChange: !keyOnly && !!A.mustChange, keyOnly }); } return reply({ t: 'loginErr', text: 'Please log in again.' }); }
       if (!authed) return reply({ t: 'loginErr', text: 'Log in first.' });
-      if (A.mustChange && m.t !== 'setpw') return reply({ t: 'err', text: 'Change the starting password (1111) first.', mustChange: true });
+      if (!keyOnly && A.mustChange && m.t !== 'setpw') return reply({ t: 'err', text: 'Change the starting password (1111) first.', mustChange: true });
       const fn = C[m.t]; if (!fn) return reply({ t: 'err', text: 'Unknown command.' });
       try { reply(fn(m, who)); } catch (e) { console.error('admin', m.t, e); reply({ t: 'err', text: 'That failed: ' + e.message }); }
     });

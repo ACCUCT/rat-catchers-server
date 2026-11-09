@@ -89,19 +89,21 @@ function call(t, o) { return new Promise((res, rej) => { if (!C.ws || C.ws.ready
 async function act(t, o, quiet) { try { const r = await call(t, o); if (r.t === 'err') { toast(r.text, 'err'); if (r.mustChange) showSetPw(); return null; } if (!quiet && r.text) toast(r.text, 'ok'); return r; } catch (e) { toast(e.message, 'err'); return null; } }
 
 // ---------- login ----------
+const KO = !!window.RC_KEYONLY; // this server only needs the owner key
 function showLogin(msg) {
   const defSrv = saved.server || (location.protocol.startsWith('http') ? location.host : '');
   root.innerHTML = '<div class="login"><div class="card"><h1>🐀 Rat Catchers<br><small style="font-size:15px;font-weight:600;color:var(--muted)">Owner App</small></h1>' +
     (msg ? '<div class="warnbox">' + esc(msg) + '</div>' : '') +
     '<label>Server address<input id="srv" value="' + esc(defSrv) + '" placeholder="localhost:8787"></label>' +
-    '<label>Admin password<input id="pw" type="password" autocomplete="current-password" placeholder="1111 the first time"></label>' +
-    '<label>Owner key<input id="key" type="password" autocomplete="off" value="' + esc(saved.key || '') + '" placeholder="from the file owner.key"></label>' +
+    (KO ? '' : '<label>Admin password<input id="pw" type="password" autocomplete="current-password" placeholder="1111 the first time"></label>') +
+    '<label>Owner key<input id="key" type="password" autocomplete="off" value="' + esc(saved.key || '') + '" placeholder="' + (KO ? 'paste RC_OWNER_KEY here' : 'from the file owner.key') + '"></label>' +
     '<label class="row"><input type="checkbox" id="rem" ' + (saved.key ? 'checked' : '') + ' style="width:auto"> Remember the server and owner key on this computer</label>' +
     '<button class="p" id="go">Log in</button>' +
-    '<p class="muted" style="margin:0">You need both the admin password and the owner key. The key is printed in the server window when it starts and saved in <b>data/owner.key</b> next to the server. Keep it secret: the password alone never gives admin access.</p></div></div>';
+    (KO ? '<p class="muted" style="margin:0">Your owner key is in your host’s settings. On <b>Render</b>: open <b>dashboard.render.com</b> → click <b>rat-catchers-server</b> → <b>Environment</b> → next to <b>RC_OWNER_KEY</b> click the eye 👁 to show it, then copy and paste it here. Keep it secret: it’s the only thing that opens this app.</p></div></div>'
+      : '<p class="muted" style="margin:0">You need both the admin password and the owner key. The key is printed in the server window when it starts and saved in <b>data/owner.key</b> next to the server. Keep it secret: the password alone never gives admin access.</p></div></div>');
   const go = async () => {
-    const srv = $('#srv').value.trim(), pw = $('#pw').value, key = $('#key').value.trim();
-    if (!srv || !pw || !key) { toast('Fill in the server, the password and the owner key.', 'err'); return; }
+    const srv = $('#srv').value.trim(), pw = KO ? '' : $('#pw').value, key = $('#key').value.replace(/\s+/g, '');
+    if (!srv || (!KO && !pw) || !key) { toast(KO ? 'Paste your owner key first.' : 'Fill in the server, the password and the owner key.', 'err'); return; }
     $('#go').disabled = true;
     try { await connect(wsUrl(srv)); const r = await call('login', { pw, key }); if (r.t !== 'loginOk') throw new Error(r.text || 'Login failed.');
       C.token = r.token; saved.server = srv; if ($('#rem').checked) saved.key = key; else delete saved.key; keep();
@@ -124,7 +126,14 @@ function start() {
   root.querySelector('nav').onclick = e => { const b = e.target.closest('[data-p]'); if (b) { C.page = b.dataset.p; draw(); } };
   refresh(); clearInterval(timer); timer = setInterval(() => { if (C.page === 'overview' || C.page === 'events') refresh(true); }, 5000);
 }
-async function refresh(soft) { const r = await act('state', {}, true); if (!r) return; C.st = r; if (!soft || !document.activeElement || !document.activeElement.closest('main') || document.activeElement.tagName === 'BUTTON') draw(); }
+const OVK = () => 'rc-owner-settings:' + C.url;
+async function refresh(soft) { const r = await act('state', {}, true); if (!r) return; C.st = r;
+  if (r.keyOnly && r.over) { // a free host forgets the owner's settings when it restarts: keep a copy here and put it back
+    let mine = null; try { mine = JSON.parse(localStorage.getItem(OVK()) || 'null'); } catch (e) {}
+    const empty = !Object.keys(r.over).length;
+    if (empty && mine && Object.keys(mine).length && !C.restored) { C.restored = 1; const ok = await act('cfg', { patch: mine }, true); if (ok) { toast('The server had restarted: your settings are back.', 'ok'); return refresh(soft); } }
+    else if (!empty) { C.restored = 1; try { localStorage.setItem(OVK(), JSON.stringify(r.over)); } catch (e) {} }
+  } if (!soft || !document.activeElement || !document.activeElement.closest('main') || document.activeElement.tagName === 'BUTTON') draw(); }
 function draw() {
   for (const b of root.querySelectorAll('nav [data-p]')) b.classList.toggle('on', b.dataset.p === C.page);
   const m = $('#main'); if (!m || !C.st) return; const sc = m.scrollTop;
@@ -239,7 +248,7 @@ function shop(s) {
 }
 function advanced(s) {
   return '<div class="grid"><div class="card"><h3>Every setting as JSON</h3><p class="muted" style="margin-top:0">This is the full live configuration. Edit carefully; it is checked as JSON before saving. Only the values you change are stored as overrides.</p><textarea id="cj" rows="24">' + esc(JSON.stringify(s.cfg, null, 2)) + '</textarea><div class="row" style="margin-top:8px">' +
-    btn('💾 Save JSON', () => { let o; try { o = JSON.parse(val('cj')); } catch (e) { toast('That is not valid JSON: ' + e.message, 'err'); return; } const d = diff(s.cfg, o); if (d === undefined) { toast('Nothing changed.'); return; } act('cfg', { patch: d }).then(refresh); }, 'p') + btn('↩️ Reset everything to defaults', () => { if (confirm('Put every setting back to the defaults?')) act('cfgReset').then(refresh); }, 'bad') + '</div></div></div>';
+    btn('💾 Save JSON', () => { let o; try { o = JSON.parse(val('cj')); } catch (e) { toast('That is not valid JSON: ' + e.message, 'err'); return; } const d = diff(s.cfg, o); if (d === undefined) { toast('Nothing changed.'); return; } act('cfg', { patch: d }).then(refresh); }, 'p') + btn('↩️ Reset everything to defaults', () => { if (confirm('Put every setting back to the defaults?')) act('cfgReset').then(r => { if (r) { try { localStorage.removeItem(OVK()); } catch (e) {} } refresh(); }); }, 'bad') + '</div></div></div>';
 }
 // only what changed: objects are compared key by key, arrays and plain values as a whole
 function diff(a, b) {
@@ -247,6 +256,8 @@ function diff(a, b) {
   return JSON.stringify(a) === JSON.stringify(b) ? undefined : b;
 }
 function security(s) {
+  if (s.keyOnly) return '<div class="grid"><div class="card" style="max-width:640px"><h3>Owner key</h3><p>This server runs on a free host, so the owner key alone opens this app (no password). It lives in your host’s settings: on Render, <b>rat-catchers-server → Environment → RC_OWNER_KEY</b>.</p><p class="muted">To make a new key, edit RC_OWNER_KEY there (any random text of 16 or more characters) and save; the server restarts with it. After 5 wrong tries from one address, logins from it are blocked for 15 minutes. The host forgets your settings when the server restarts, so this app keeps a copy in this browser and puts them back when you log in.</p>' +
+    btn('Log out of the owner app', () => { C.token = null; try { C.ws.close(); } catch (e) {} showLogin(); }) + '</div></div>';
   return '<div class="grid"><div class="card" style="max-width:640px"><h3>Admin password</h3><div class="grid"><input id="np1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><input id="np2" type="password" placeholder="Type it again" autocomplete="new-password">' + btn('Change password', () => { if (val('np1') !== val('np2')) { toast('The two passwords are different.', 'err'); return; } act('setpw', { pw: val('np1') }); }, 'p') + '</div></div>' +
     '<div class="card" style="max-width:640px"><h3>Owner key</h3><p>Logging in needs the password <b>and</b> the owner key. The key lives in this file on the server computer:</p><p><code>' + esc(s.keyFile) + '</code></p><p class="muted">To make a new key, stop the server, delete that file and start the server again; it prints the new key. After 5 wrong tries from one address, logins from it are blocked for 15 minutes. Every action here is written to the audit log.</p>' +
     btn('Log out of the owner app', () => { C.token = null; try { C.ws.close(); } catch (e) {} showLogin(); }) + '</div></div>';

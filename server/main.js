@@ -61,6 +61,7 @@ const server = http.createServer((req, res) => {
   if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(403); res.end(); return; }
   fs.readFile(file, (err, buf) => {
     if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
+    if (G.keyOnly && path.basename(file) === 'admin.html') buf = Buffer.from(String(buf).replace('<head>', '<head><script>window.RC_KEYONLY = 1;</script>'));
     if (G.devSaves && path.basename(file) === 'index.html') buf = Buffer.from(String(buf).replace('window.RC_SERVER = location.host;', "window.RC_HOSTED = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';"));
     const h = { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
     if (path.basename(file) === 'admin.html') { h['X-Frame-Options'] = 'DENY'; h['Content-Security-Policy'] = "frame-ancestors 'none'"; }
