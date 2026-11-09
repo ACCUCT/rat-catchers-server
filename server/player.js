@@ -20,8 +20,13 @@ function load(G, acc) {
   const row = G.db.st.plGet.get(acc.id); if (!row) return null;
   let d = {}; try { d = JSON.parse(row.data || '{}'); } catch (e) {}
   d = Object.assign(newData(), d);
+  // eggs were removed from the game: eggs a player still had become money (what they cost)
+  if (d.eggs && Object.keys(d.eggs).some(k => d.eggs[k] > 0)) { let back = 0; for (const k of Object.keys(d.eggs)) back += Math.max(0, d.eggs[k] | 0) * ((G.cfg.eggs[k] || D.EGG[k] || { price: 0 }).price || 0); d.eggs = {}; d.eggRefund = (d.eggRefund || 0) + back; }
+  const refund = d.eggRefund || 0; delete d.eggRefund;
+  if (d.quests && Array.isArray(d.quests.list)) d.quests.list = d.quests.list.filter(q => q.stat !== 'eggs');
   const P = { id: acc.id, name: acc.name, money: row.money, level: row.level, xp: row.xp, rebirths: row.rebirths, caught: row.caught, trades: row.trades, d, last_seen: row.last_seen, color: row.color || '#ff9f1a', rats: new Map(), dirty: false };
   for (const r of G.db.st.ratsOf.all(acc.id)) P.rats.set(r.id, ratFromRow(r));
+  if (refund > 0) { P.money += refund; P.eggRefund = refund; P.dirty = true; }
   return P;
 }
 function scores(P) {
@@ -86,7 +91,7 @@ function discover(G, P, r) {
   }
   checkAch(G, P);
 }
-const INDEX_RW = { 10: { money: 5000, potion: 'luck' }, 25: { money: 50000, egg: 'egg2', n: 3 }, 50: { money: 2500000, potion: 'superluck' }, 75: { money: 100000000, egg: 'egg5' }, 100: { money: 1000000000, potion: 'ultraluck' } };
+const INDEX_RW = { 10: { money: 5000, potion: 'luck' }, 25: { money: 50000, potion: 'luck', mystery: 1 }, 50: { money: 2500000, potion: 'superluck' }, 75: { money: 100000000, potion: 'superluck' }, 100: { money: 1000000000, potion: 'ultraluck' } };
 const indexCount = P => Object.keys(P.d.index).filter(k => SP[k] && P.d.index[k].n > 0).length;
 function fieldsDone(P) { let n = 0; for (const f of FIELDS) { const nat = SPECIES.filter(s => s.fields.includes(f.id)); if (nat.length && nat.every(s => P.d.index[s.id] && P.d.index[s.id].n)) n++; } return n; }
 
@@ -109,7 +114,7 @@ function grant(G, P, rw, why) {
   const got = [];
   if (rw.money) { const m = rw.special || rw.money < 20 ? rewardMoney(G, P, rw.money) : rw.money; addMoney(G, P, m, false); got.push(D.fmtMoney(m)); }
   if (rw.potion) { P.d.potions[rw.potion] = (P.d.potions[rw.potion] || 0) + 1; got.push(POT[rw.potion].n); }
-  if (rw.egg) { const n = rw.n || 1; P.d.eggs[rw.egg] = (P.d.eggs[rw.egg] || 0) + n; got.push((n > 1 ? n + 'x ' : '') + D.EGG[rw.egg].n); }
+  if (rw.egg) { const n = rw.n || 1, id = rw.egg === 'egg2' ? 'luck' : 'superluck'; P.d.potions[id] = (P.d.potions[id] || 0) + n; got.push((n > 1 ? n + 'x ' : '') + POT[id].n); } // eggs were removed: a luck potion instead
   if (rw.cos) { P.d.cos[rw.cos] = (P.d.cos[rw.cos] || 0) + 1; got.push(COS[rw.cos].n); }
   if (rw.title && !P.d.titles.includes(rw.title)) { P.d.titles.push(rw.title); if (!P.d.title) P.d.title = rw.title; got.push('title “' + rw.title + '”'); }
   if (rw.mystery) { P.d.boxes += rw.mystery; got.push('Mystery Box'); }
@@ -146,7 +151,7 @@ function ensureQuests(G, P) {
     const q = pool.splice((r() * pool.length) | 0, 1)[0];
     let n = q.n[tier]; if (q.money) n = Math.round(Math.max(5000, m * 300) * q.n[tier]);
     const rwRoll = r(), reward = { money: Math.round(Math.max(800, m * 90) * (1 + tier) * (1 + list.length * 0.25)) };
-    if (rwRoll < 0.35) reward.potion = ['luck', 'money', 'catch', 'speed'][(r() * 4) | 0]; else if (rwRoll < 0.55) reward.egg = tier ? 'egg5' : 'egg2';
+    if (rwRoll < 0.35) reward.potion = ['luck', 'money', 'catch', 'speed'][(r() * 4) | 0]; else if (rwRoll < 0.55) reward.potion = tier ? 'superluck' : 'luck';
     list.push({ id: q.id, stat: q.stat, n, prog: 0, claimed: 0, rw: reward, d: q.d.replace('{n}', D.fmtN(n)).replace('{money}', D.fmtMoney(n)) });
   }
   P.d.quests = { day: today, list }; P.d.fieldsVisited = {}; P.dirty = true;

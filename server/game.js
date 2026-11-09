@@ -210,7 +210,7 @@ function create(G) {
     const base = Math.round(Math.max(500, PL.mps(G, P, false).total * 120) * (1 + fi * 0.6) * (c.k + 1));
     if (roll < 0.40) rw.money = base;
     else if (roll < 0.65) { rw.potion = D.POTIONS[(rnd() * D.POTIONS.length) | 0].id; rw.money = Math.round(base / 3); }
-    else if (roll < 0.80) { rw.egg = fi >= 4 && rnd() < 0.4 ? 'egg5' : 'egg2'; }
+    else if (roll < 0.80) { rw.potion = fi >= 4 && rnd() < 0.4 ? 'superluck' : 'luck'; rw.money = Math.round(base / 2); }
     else if (roll < 0.90) rw.mystery = 1;
     else if (roll < 0.96) { const list = D.COSMETICS.filter(x => x.src === 'shop' && (G.cfg.cosPrices[x.id] || 0) < 5e6); rw.cos = list[(rnd() * list.length) | 0].id; }
     else { const next = D.RODS.find(r => !P.d.rods.includes(r.id) && r.i <= 2 + Math.floor(fi / 2)); if (next) rw.rod = next.id; else rw.money = base * 3; }
@@ -317,6 +317,7 @@ function create(G) {
         offline = { secs: Math.round(secs), amt, rate: G.cfg.offlineRate, capped: (t - lastSeen) / 1000 > G.cfg.offlineMaxHours * 3600, away: Math.round((t - lastSeen) / 1000), maxH: G.cfg.offlineMaxHours };
       }
     }
+    if (P.eggRefund) { const m = P.eggRefund; delete P.eggRefund; setTimeout(() => G.toast(P, { kind: 'ok', text: 'Eggs are gone from RAT CATCHERS.', sub: 'The eggs you had were turned into ' + D.fmtMoney(m) + '.' }), 2500); }
     P.last_seen = t; PL.ensureQuests(G, P); PL.checkAch(G, P); PL.save(G, P);
     send(s, { t: 'welcome', token: tok || undefined, you: PL.view(G, P), cfg: G.publicCfg(), srv: t, events: G.events.state(), ann: G.events.recent(), offline });
     let room = null; if (s.want && G.rooms.has(s.want) && G.rooms.get(s.want).players.size < ROOM_MAX) room = G.rooms.get(s.want);
@@ -499,7 +500,8 @@ function create(G) {
       if (kind === 'tokens') { const c = COS[id]; if (!c || !c.tokens) return fail('Not in the event shop.'); if (P.d.tokens < c.tokens) return fail('Not enough event tokens.'); P.d.tokens -= c.tokens; P.d.cos[id] = (P.d.cos[id] || 0) + 1; return done('You got ' + c.n + '!'); }
       if (kind === 'mystery') { if (!pay(P, cfg.mysteryPrice * n)) return fail('Not enough money.'); P.d.boxes += n; return done('You bought ' + n + ' Mystery Box' + (n > 1 ? 'es' : '') + '.'); }
       if (kind === 'snack') { if (!pay(P, snackPrice(P) * n)) return fail('Not enough money.'); P.d.snacks += n; return done('You bought ' + n + ' Rat Snack' + (n > 1 ? 's' : '') + '.'); }
-      if (kind === 'egg') { const e = EGG[id]; if (!e) return fail('Unknown egg.'); if (e.limited && !ltdOn()) return fail('The Limited-Time Egg is not available right now.'); if (!PL.roomFor(G, P)) return fail('No room for a new rat. Sell or store some first.'); if (!pay(P, cfg.eggs[id].price)) return fail('Not enough money.'); const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); return done(null, { rat: PL.ratView(rat) }); }
+      if (kind === 'egg') return fail('Eggs are gone from RAT CATCHERS.');
+      if (kind === 'egg_removed') { const e = EGG[id]; if (!e) return fail('Unknown egg.'); if (e.limited && !ltdOn()) return fail('The Limited-Time Egg is not available right now.'); if (!PL.roomFor(G, P)) return fail('No room for a new rat. Sell or store some first.'); if (!pay(P, cfg.eggs[id].price)) return fail('Not enough money.'); const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); return done(null, { rat: PL.ratView(rat) }); }
       return fail('That is not for sale.');
     });
   };
@@ -518,7 +520,8 @@ function create(G) {
     if (RI[SP[sp].r].i >= 8) G.events.announce({ kind: 'rare', text: P.name + ' hatched ' + D.ratName(rat) + ' from a ' + EGG[eggId].n + '!', col: RI[SP[sp].r].col, dur: 8 });
     return rat;
   }
-  H.hatch = (s, m) => { // eggs from rewards
+  H.hatch = (s) => send(s, { t: 'err', text: 'Eggs are gone from RAT CATCHERS.' });
+  H.hatchOld = (s, m) => { // (eggs were removed)
     const P = s.P, id = String(m.id || ''); if (!EGG[id] || !(P.d.eggs[id] > 0)) return send(s, { t: 'err', text: 'You don’t have that egg.' });
     if (!PL.roomFor(G, P)) return send(s, { t: 'err', text: 'No room for a new rat. Sell or store some first.' });
     G.db.tx(() => { P.d.eggs[id]--; const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); PL.save(G, P); G.sync(P); send(s, { t: 'bought', kind: 'egg', id, rat: PL.ratView(rat) }); });
@@ -528,7 +531,6 @@ function create(G) {
     const k = D.MYSTERY.table[D.pickWeighted(D.MYSTERY.table.map(x => x[1]), rnd)][0], rw = {};
     if (k === 'money') rw.money = Math.round(Math.max(20000, PL.mps(G, P, false).total * 400));
     if (k === 'potion') rw.potion = D.POTIONS[(rnd() * D.POTIONS.length) | 0].id;
-    if (k === 'egg2' || k === 'egg5') rw.egg = k;
     if (k === 'cosmetic') { const list = D.COSMETICS.filter(c => c.src === 'shop'); rw.cos = list[(rnd() * list.length) | 0].id; }
     if (k === 'rod') { const owned = Math.max(...P.d.rods.map(r => D.ROD[r].i)); const up = D.RODS[Math.min(D.RODS.length - 1, owned + 1 + (rnd() < 0.15 ? 1 : 0))]; if (P.d.rods.includes(up.id)) rw.money = Math.round(Math.max(50000, PL.mps(G, P, false).total * 900)); else rw.rod = up.id; }
     G.db.tx(() => { P.d.boxes--; const got = PL.grant(G, P, rw, null); PL.save(G, P); G.sync(P); send(s, { t: 'boxOpen', k, got }); });

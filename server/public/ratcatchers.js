@@ -68,17 +68,17 @@ const SP = {}; SPECIES.forEach((s, i) => { s.i = i; SP[s.id] = s; });
 // ---------- fields ----------
 // w: spawn weight per rarity index (common .. secret).
 const FIELDS = [
-  { id: 'meadow', n: 'Starter Meadow', lvl: 1, w: [70, 24, 5, 1, 0, 0, 0, 0, 0, 0], song: 'meadow', d: 'Sunny hills, wildflowers and lots of friendly rats.' },
-  { id: 'clover', n: 'Clover Fields', lvl: 5, w: [45, 33, 15, 5.5, 1.5, 0, 0, 0, 0, 0], song: 'clover', d: 'Rolling clover, windmills and lucky breezes.' },
-  { id: 'mushroom', n: 'Mushroom Forest', lvl: 10, w: [25, 32, 25, 12, 4.5, 1.5, 0, 0, 0, 0], song: 'mushroom', d: 'Giant glowing mushrooms under a dark green canopy.' },
-  { id: 'crystal', n: 'Crystal Caves', lvl: 20, w: [8, 22, 32, 23, 10, 4, 1, 0, 0, 0], song: 'crystal', d: 'A huge cavern full of humming crystals.' },
-  { id: 'frozen', n: 'Frozen Valley', lvl: 30, w: [0, 10, 25, 30, 20, 10, 4.5, 0.5, 0, 0], song: 'frozen', d: 'Snowy pines, a frozen lake and the northern lights.' },
-  { id: 'lava', n: 'Lava Lands', lvl: 40, w: [0, 0, 12, 25, 30, 20, 10, 2.8, 0.2, 0], song: 'lava', d: 'Black rock, rivers of lava and a smoking volcano.' },
-  { id: 'heaven', n: "Heaven's Garden", lvl: 55, w: [0, 0, 0, 10, 25, 30, 25, 9, 1, 0], song: 'heaven', d: 'Gardens on the clouds behind the golden gates.' },
-  { id: 'omega', n: 'Omega Dimension', lvl: 75, w: [0, 0, 0, 0, 10, 20, 35, 30, 5, 0], song: 'omega', d: 'Floating shapes in a void that hums with power.' },
-  { id: 'secret', n: 'Secret Realm', lvl: 100, w: [0, 0, 0, 0, 0, 10, 30, 45, 15, 0], song: 'secret', d: 'Ancient ruins under a rainbow sky. Few have seen it.' },
+  { id: 'meadow', n: 'Starter Meadow', lvl: 1, w: [49.81989, 35, 11, 3, 0.8, 0.3, 0.08, 0.0001, 0.00001, 0], song: 'meadow', d: 'Sunny hills, wildflowers and lots of friendly rats.' },
+  { id: 'clover', n: 'Clover Fields', lvl: 5, w: [30, 32.79967, 30, 5, 1.5, 0.6, 0.1, 0.0003, 0.00003, 0], song: 'clover', d: 'Rolling clover, windmills and lucky breezes.' },
+  { id: 'mushroom', n: 'Mushroom Forest', lvl: 10, w: [25, 25, 36.44945, 10, 2.5, 0.8, 0.25, 0.0005, 0.00005, 0], song: 'mushroom', d: 'Giant glowing mushrooms under a dark green canopy.' },
+  { id: 'crystal', n: 'Crystal Caves', lvl: 20, w: [20.89925, 25, 30, 20, 3, 0.8, 0.3, 0.0007, 0.00005, 0], song: 'crystal', d: 'A huge cavern full of humming crystals.' },
+  { id: 'frozen', n: 'Frozen Valley', lvl: 30, w: [14.89914, 25, 30, 25, 4, 0.75, 0.35, 0.0008, 0.00006, 0], song: 'frozen', d: 'Snowy pines, a frozen lake and the northern lights.' },
+  { id: 'lava', n: 'Lava Lands', lvl: 40, w: [12.49892, 25, 30, 25, 6, 1, 0.5, 0.001, 0.00008, 0], song: 'lava', d: 'Black rock, rivers of lava and a smoking volcano.' },
+  { id: 'heaven', n: "Heaven's Garden", lvl: 55, w: [5, 10, 40, 34.2969, 8, 2, 0.7, 0.003, 0.0001, 0], song: 'heaven', d: 'Gardens on the clouds behind the golden gates.' },
+  { id: 'omega', n: 'Omega Dimension', lvl: 75, w: [0, 5, 30, 51.1949, 10, 3, 0.8, 0.005, 0.0001, 0], song: 'omega', d: 'Floating shapes in a void that hums with power.' },
+  { id: 'secret', n: 'Secret Realm', lvl: 100, w: [0, 0, 28.9925, 50, 15, 5, 1, 0.007, 0.0005, 0], song: 'secret', d: 'Ancient ruins under a rainbow sky. Few have seen it.' },
   // a special area that only reborn players can enter (rebirth unlocks it at any level)
-  { id: 'reborn', n: 'Reborn Sanctuary', lvl: 1, reb: 1, w: [0, 0, 12, 24, 28, 19, 10, 5, 2, 0], song: 'reborn', d: 'A hidden garden of pink crystals. Only reborn catchers may enter.' }];
+  { id: 'reborn', n: 'Reborn Sanctuary', lvl: 1, reb: 1, w: [72.7913, 0, 0, 5, 15, 6, 1.2, 0.008, 0.0007, 0], song: 'reborn', d: 'A hidden garden of pink crystals. Only reborn catchers may enter.' }];
 const FI = {}; FIELDS.forEach((f, i) => { f.i = i; FI[f.id] = f; });
 
 // ---------- mutations ----------
@@ -139,8 +139,8 @@ const EGGS = [
 const EGG = {}; EGGS.forEach(e => { EGG[e.id] = e; });
 
 // mystery box: can hold better rods
-const MYSTERY = { id: 'mystery', n: 'Mystery Box', price: 50000, d: 'Money, potions, eggs, cosmetics, and a chance at a better rod.',
-  table: [['money', 40], ['potion', 30], ['egg2', 14], ['cosmetic', 8], ['rod', 7], ['egg5', 1]] };
+const MYSTERY = { id: 'mystery', n: 'Mystery Box', price: 50000, d: 'Money, potions, cosmetics, and a chance at a better rod.',
+  table: [['money', 46], ['potion', 38], ['cosmetic', 9], ['rod', 7]] };
 
 // ---------- rat cosmetics ----------
 // slot: where it sits on the rat. cat: the shop category. src: how to get it (shop, achievement, daily, event, promo, rebirth).
@@ -200,21 +200,19 @@ const ACHIEVEMENTS = [
   { id: 'c1000', n: 'Catch 1,000 Rats', d: 'Catch 1,000 rats.', stat: 'caught', goal: 1000, rw: { money: 1000000, title: 'Rat Wrangler', cos: 'catchercap' } },
   { id: 'c10000', n: 'Catch 10,000 Rats', d: 'Catch 10,000 rats.', stat: 'caught', goal: 10000, rw: { money: 100000000, title: 'Rat Legend', potion: 'ultraluck' } },
   { id: 'firstmut', n: 'Something Shiny', d: 'Catch a rat with any mutation.', stat: 'mutCaught', goal: 1, rw: { money: 2500, potion: 'mutation' } },
-  { id: 'firstleg', n: 'First Legendary', d: 'Catch or hatch a Legendary rat.', stat: 'r_legendary', goal: 1, rw: { money: 25000, potion: 'superluck', title: 'Legend Finder' } },
-  { id: 'firstmyth', n: 'First Mythical', d: 'Catch or hatch a Mythical rat.', stat: 'r_mythical', goal: 1, rw: { money: 50000, cos: 'flameaura' } },
-  { id: 'firstapoc', n: 'First Apocryphal', d: 'Catch or hatch an Apocryphal rat.', stat: 'r_apocryphal', goal: 1, rw: { money: 250000, potion: 'supermoney' } },
-  { id: 'firstomega', n: 'First Omega', d: 'Catch or hatch an Omega rat.', stat: 'r_omega', goal: 1, rw: { money: 1000000, potion: 'ultraluck', title: 'Omega Hunter', cos: 'voidwings' } },
-  { id: 'firstgod', n: 'First God-like', d: 'Catch or hatch a God-like rat.', stat: 'r_godlike', goal: 1, rw: { money: 10000000, title: 'Godcatcher', cos: 'divinecrown' } },
+  { id: 'firstleg', n: 'First Legendary', d: 'Catch a Legendary rat.', stat: 'r_legendary', goal: 1, rw: { money: 25000, potion: 'superluck', title: 'Legend Finder' } },
+  { id: 'firstmyth', n: 'First Mythical', d: 'Catch a Mythical rat.', stat: 'r_mythical', goal: 1, rw: { money: 50000, cos: 'flameaura' } },
+  { id: 'firstapoc', n: 'First Apocryphal', d: 'Catch an Apocryphal rat.', stat: 'r_apocryphal', goal: 1, rw: { money: 250000, potion: 'supermoney' } },
+  { id: 'firstomega', n: 'First Omega', d: 'Catch an Omega rat.', stat: 'r_omega', goal: 1, rw: { money: 1000000, potion: 'ultraluck', title: 'Omega Hunter', cos: 'voidwings' } },
+  { id: 'firstgod', n: 'First God-like', d: 'Catch a God-like rat.', stat: 'r_godlike', goal: 1, rw: { money: 10000000, title: 'Godcatcher', cos: 'divinecrown' } },
   { id: 'firstsecret', n: 'First Secret', d: 'Find a Secret rat.', stat: 'r_secret', goal: 1, rw: { money: 50000000, title: 'Keeper of Secrets', cos: 'shadowaura' } },
   { id: 'index', n: 'Discover Every Rat', d: 'Fill every page of the Rat Index.', stat: 'indexN', goal: SPECIES.length, rw: { money: 500000000, title: 'Ratologist', cos: 'rainbowtrail' } },
-  { id: 'fields', n: 'Complete Every Field', d: 'Catch every native rat of all nine fields.', stat: 'fieldsDone', goal: FIELDS.length, rw: { money: 250000000, title: 'Explorer Supreme', egg: 'egg5' } },
+  { id: 'fields', n: 'Complete Every Field', d: 'Catch every native rat of all nine fields.', stat: 'fieldsDone', goal: FIELDS.length, rw: { money: 250000000, title: 'Explorer Supreme', potion: 'superluck' } },
   { id: 't1', n: 'First Trade', d: 'Complete a trade with another player.', stat: 'trades', goal: 1, rw: { money: 5000 } },
   { id: 't100', n: 'Complete 100 Trades', d: 'Complete 100 trades.', stat: 'trades', goal: 100, rw: { money: 5000000, title: 'Master Trader', cos: 'goldchain' } },
   { id: 'l10', n: 'Level 10', d: 'Reach player level 10.', stat: 'level', goal: 10, rw: { money: 5000, potion: 'money' } },
   { id: 'l50', n: 'Level 50', d: 'Reach player level 50.', stat: 'level', goal: 50, rw: { money: 5000000, title: 'Veteran' } },
   { id: 'l100', n: 'Reach Level 100', d: 'Reach player level 100.', stat: 'level', goal: 100, rw: { money: 1000000000, title: 'Centurion', cos: 'laurel' } },
-  { id: 'eggs10', n: 'Egg Cracker', d: 'Hatch 10 eggs.', stat: 'eggs', goal: 10, rw: { money: 10000, egg: 'egg2' } },
-  { id: 'eggs100', n: 'Egg Master', d: 'Hatch 100 eggs.', stat: 'eggs', goal: 100, rw: { money: 2500000, egg: 'egg5' } },
   { id: 'chests', n: 'Treasure Hunter', d: 'Open 25 treasure chests.', stat: 'chests', goal: 25, rw: { money: 100000, potion: 'luck' } },
   { id: 'rebirth1', n: 'Born Again', d: 'Rebirth for the first time.', stat: 'rebirths', goal: 1, rw: { title: 'Reborn', cos: 'rebirthcrown' } },
   { id: 'rebirth5', n: 'Phoenix Catcher', d: 'Rebirth 5 times.', stat: 'rebirths', goal: 5, rw: { title: 'Phoenix', cos: 'rebirthaura' } },
@@ -225,8 +223,8 @@ const ACH = {}; ACHIEVEMENTS.forEach(a => { ACH[a.id] = a; });
 
 // ---------- daily rewards (7-day cycle, the 7th is special) ----------
 const DAILY = [
-  { money: 1 }, { potion: 'luck' }, { egg: 'egg2', n: 2 }, { potion: 'money', money: 1 }, { mystery: 1, rod: 'next' }, { cos: 'chefhat', potion: 'catch' },
-  { special: 1, money: 5, egg: 'egg5', potion: 'superluck', cos: 'weeklycrown' }];
+  { money: 1 }, { potion: 'luck' }, { potion: 'catch', money: 1 }, { potion: 'money', money: 1 }, { mystery: 1, rod: 'next' }, { cos: 'chefhat', potion: 'catch' },
+  { special: 1, money: 5, potion: 'superluck', cos: 'weeklycrown' }];
 const DAILY_COS_ROTATION = ['chefhat', 'heartglasses', 'bubbletrail']; // day 6 cycles through these
 
 // ---------- daily quests ----------
@@ -237,7 +235,6 @@ const QUESTS = [
   { id: 'fields', d: 'Visit {n} different fields', stat: 'fieldsToday', n: [2, 3, 4] },
   { id: 'mutated', d: 'Catch a mutated rat', stat: 'mutCaught', n: [1, 1, 2] },
   { id: 'earn', d: 'Earn {money}', stat: 'earned', n: [1, 3, 6], money: 1 },
-  { id: 'eggs', d: 'Hatch {n} eggs', stat: 'eggs', n: [1, 3, 5] },
   { id: 'chest', d: 'Open {n} treasure chests', stat: 'chests', n: [1, 2, 3] },
   { id: 'trade', d: 'Complete a trade', stat: 'trades', n: [1, 1, 2] },
   { id: 'levelup', d: 'Level up rats {n} times', stat: 'ratLevels', n: [3, 6, 10] }];
@@ -246,7 +243,6 @@ const QUESTS = [
 // Stations stand on a ring around the plaza (angle in degrees: 0 is north, toward the field portals).
 const STATIONS = [
   { id: 'shop', n: 'Item Shop', a: 76, r: 24, key: 'Shop' },
-  { id: 'eggs', n: 'Egg Hatchery', a: 95, r: 24, key: 'Eggs' },
   { id: 'bank', n: 'Rat Bank', a: 114, r: 24, key: 'Money slots' },
   { id: 'inventory', n: 'Rat Inventory', a: 133, r: 24, key: 'Inventory' },
   { id: 'daily', n: 'Daily Rewards', a: 152, r: 25, key: 'Daily rewards' },
@@ -487,8 +483,13 @@ function load(G, acc) {
   const row = G.db.st.plGet.get(acc.id); if (!row) return null;
   let d = {}; try { d = JSON.parse(row.data || '{}'); } catch (e) {}
   d = Object.assign(newData(), d);
+  // eggs were removed from the game: eggs a player still had become money (what they cost)
+  if (d.eggs && Object.keys(d.eggs).some(k => d.eggs[k] > 0)) { let back = 0; for (const k of Object.keys(d.eggs)) back += Math.max(0, d.eggs[k] | 0) * ((G.cfg.eggs[k] || D.EGG[k] || { price: 0 }).price || 0); d.eggs = {}; d.eggRefund = (d.eggRefund || 0) + back; }
+  const refund = d.eggRefund || 0; delete d.eggRefund;
+  if (d.quests && Array.isArray(d.quests.list)) d.quests.list = d.quests.list.filter(q => q.stat !== 'eggs');
   const P = { id: acc.id, name: acc.name, money: row.money, level: row.level, xp: row.xp, rebirths: row.rebirths, caught: row.caught, trades: row.trades, d, last_seen: row.last_seen, color: row.color || '#ff9f1a', rats: new Map(), dirty: false };
   for (const r of G.db.st.ratsOf.all(acc.id)) P.rats.set(r.id, ratFromRow(r));
+  if (refund > 0) { P.money += refund; P.eggRefund = refund; P.dirty = true; }
   return P;
 }
 function scores(P) {
@@ -553,7 +554,7 @@ function discover(G, P, r) {
   }
   checkAch(G, P);
 }
-const INDEX_RW = { 10: { money: 5000, potion: 'luck' }, 25: { money: 50000, egg: 'egg2', n: 3 }, 50: { money: 2500000, potion: 'superluck' }, 75: { money: 100000000, egg: 'egg5' }, 100: { money: 1000000000, potion: 'ultraluck' } };
+const INDEX_RW = { 10: { money: 5000, potion: 'luck' }, 25: { money: 50000, potion: 'luck', mystery: 1 }, 50: { money: 2500000, potion: 'superluck' }, 75: { money: 100000000, potion: 'superluck' }, 100: { money: 1000000000, potion: 'ultraluck' } };
 const indexCount = P => Object.keys(P.d.index).filter(k => SP[k] && P.d.index[k].n > 0).length;
 function fieldsDone(P) { let n = 0; for (const f of FIELDS) { const nat = SPECIES.filter(s => s.fields.includes(f.id)); if (nat.length && nat.every(s => P.d.index[s.id] && P.d.index[s.id].n)) n++; } return n; }
 
@@ -576,7 +577,7 @@ function grant(G, P, rw, why) {
   const got = [];
   if (rw.money) { const m = rw.special || rw.money < 20 ? rewardMoney(G, P, rw.money) : rw.money; addMoney(G, P, m, false); got.push(D.fmtMoney(m)); }
   if (rw.potion) { P.d.potions[rw.potion] = (P.d.potions[rw.potion] || 0) + 1; got.push(POT[rw.potion].n); }
-  if (rw.egg) { const n = rw.n || 1; P.d.eggs[rw.egg] = (P.d.eggs[rw.egg] || 0) + n; got.push((n > 1 ? n + 'x ' : '') + D.EGG[rw.egg].n); }
+  if (rw.egg) { const n = rw.n || 1, id = rw.egg === 'egg2' ? 'luck' : 'superluck'; P.d.potions[id] = (P.d.potions[id] || 0) + n; got.push((n > 1 ? n + 'x ' : '') + POT[id].n); } // eggs were removed: a luck potion instead
   if (rw.cos) { P.d.cos[rw.cos] = (P.d.cos[rw.cos] || 0) + 1; got.push(COS[rw.cos].n); }
   if (rw.title && !P.d.titles.includes(rw.title)) { P.d.titles.push(rw.title); if (!P.d.title) P.d.title = rw.title; got.push('title “' + rw.title + '”'); }
   if (rw.mystery) { P.d.boxes += rw.mystery; got.push('Mystery Box'); }
@@ -613,7 +614,7 @@ function ensureQuests(G, P) {
     const q = pool.splice((r() * pool.length) | 0, 1)[0];
     let n = q.n[tier]; if (q.money) n = Math.round(Math.max(5000, m * 300) * q.n[tier]);
     const rwRoll = r(), reward = { money: Math.round(Math.max(800, m * 90) * (1 + tier) * (1 + list.length * 0.25)) };
-    if (rwRoll < 0.35) reward.potion = ['luck', 'money', 'catch', 'speed'][(r() * 4) | 0]; else if (rwRoll < 0.55) reward.egg = tier ? 'egg5' : 'egg2';
+    if (rwRoll < 0.35) reward.potion = ['luck', 'money', 'catch', 'speed'][(r() * 4) | 0]; else if (rwRoll < 0.55) reward.potion = tier ? 'superluck' : 'luck';
     list.push({ id: q.id, stat: q.stat, n, prog: 0, claimed: 0, rw: reward, d: q.d.replace('{n}', D.fmtN(n)).replace('{money}', D.fmtMoney(n)) });
   }
   P.d.quests = { day: today, list }; P.d.fieldsVisited = {}; P.dirty = true;
@@ -1043,7 +1044,7 @@ function create(G) {
     const base = Math.round(Math.max(500, PL.mps(G, P, false).total * 120) * (1 + fi * 0.6) * (c.k + 1));
     if (roll < 0.40) rw.money = base;
     else if (roll < 0.65) { rw.potion = D.POTIONS[(rnd() * D.POTIONS.length) | 0].id; rw.money = Math.round(base / 3); }
-    else if (roll < 0.80) { rw.egg = fi >= 4 && rnd() < 0.4 ? 'egg5' : 'egg2'; }
+    else if (roll < 0.80) { rw.potion = fi >= 4 && rnd() < 0.4 ? 'superluck' : 'luck'; rw.money = Math.round(base / 2); }
     else if (roll < 0.90) rw.mystery = 1;
     else if (roll < 0.96) { const list = D.COSMETICS.filter(x => x.src === 'shop' && (G.cfg.cosPrices[x.id] || 0) < 5e6); rw.cos = list[(rnd() * list.length) | 0].id; }
     else { const next = D.RODS.find(r => !P.d.rods.includes(r.id) && r.i <= 2 + Math.floor(fi / 2)); if (next) rw.rod = next.id; else rw.money = base * 3; }
@@ -1150,6 +1151,7 @@ function create(G) {
         offline = { secs: Math.round(secs), amt, rate: G.cfg.offlineRate, capped: (t - lastSeen) / 1000 > G.cfg.offlineMaxHours * 3600, away: Math.round((t - lastSeen) / 1000), maxH: G.cfg.offlineMaxHours };
       }
     }
+    if (P.eggRefund) { const m = P.eggRefund; delete P.eggRefund; setTimeout(() => G.toast(P, { kind: 'ok', text: 'Eggs are gone from RAT CATCHERS.', sub: 'The eggs you had were turned into ' + D.fmtMoney(m) + '.' }), 2500); }
     P.last_seen = t; PL.ensureQuests(G, P); PL.checkAch(G, P); PL.save(G, P);
     send(s, { t: 'welcome', token: tok || undefined, you: PL.view(G, P), cfg: G.publicCfg(), srv: t, events: G.events.state(), ann: G.events.recent(), offline });
     let room = null; if (s.want && G.rooms.has(s.want) && G.rooms.get(s.want).players.size < ROOM_MAX) room = G.rooms.get(s.want);
@@ -1332,7 +1334,8 @@ function create(G) {
       if (kind === 'tokens') { const c = COS[id]; if (!c || !c.tokens) return fail('Not in the event shop.'); if (P.d.tokens < c.tokens) return fail('Not enough event tokens.'); P.d.tokens -= c.tokens; P.d.cos[id] = (P.d.cos[id] || 0) + 1; return done('You got ' + c.n + '!'); }
       if (kind === 'mystery') { if (!pay(P, cfg.mysteryPrice * n)) return fail('Not enough money.'); P.d.boxes += n; return done('You bought ' + n + ' Mystery Box' + (n > 1 ? 'es' : '') + '.'); }
       if (kind === 'snack') { if (!pay(P, snackPrice(P) * n)) return fail('Not enough money.'); P.d.snacks += n; return done('You bought ' + n + ' Rat Snack' + (n > 1 ? 's' : '') + '.'); }
-      if (kind === 'egg') { const e = EGG[id]; if (!e) return fail('Unknown egg.'); if (e.limited && !ltdOn()) return fail('The Limited-Time Egg is not available right now.'); if (!PL.roomFor(G, P)) return fail('No room for a new rat. Sell or store some first.'); if (!pay(P, cfg.eggs[id].price)) return fail('Not enough money.'); const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); return done(null, { rat: PL.ratView(rat) }); }
+      if (kind === 'egg') return fail('Eggs are gone from RAT CATCHERS.');
+      if (kind === 'egg_removed') { const e = EGG[id]; if (!e) return fail('Unknown egg.'); if (e.limited && !ltdOn()) return fail('The Limited-Time Egg is not available right now.'); if (!PL.roomFor(G, P)) return fail('No room for a new rat. Sell or store some first.'); if (!pay(P, cfg.eggs[id].price)) return fail('Not enough money.'); const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); return done(null, { rat: PL.ratView(rat) }); }
       return fail('That is not for sale.');
     });
   };
@@ -1351,7 +1354,8 @@ function create(G) {
     if (RI[SP[sp].r].i >= 8) G.events.announce({ kind: 'rare', text: P.name + ' hatched ' + D.ratName(rat) + ' from a ' + EGG[eggId].n + '!', col: RI[SP[sp].r].col, dur: 8 });
     return rat;
   }
-  H.hatch = (s, m) => { // eggs from rewards
+  H.hatch = (s) => send(s, { t: 'err', text: 'Eggs are gone from RAT CATCHERS.' });
+  H.hatchOld = (s, m) => { // (eggs were removed)
     const P = s.P, id = String(m.id || ''); if (!EGG[id] || !(P.d.eggs[id] > 0)) return send(s, { t: 'err', text: 'You don’t have that egg.' });
     if (!PL.roomFor(G, P)) return send(s, { t: 'err', text: 'No room for a new rat. Sell or store some first.' });
     G.db.tx(() => { P.d.eggs[id]--; const rat = hatch(s, id); if (!rat) throw new Error('hatch failed'); PL.save(G, P); G.sync(P); send(s, { t: 'bought', kind: 'egg', id, rat: PL.ratView(rat) }); });
@@ -1361,7 +1365,6 @@ function create(G) {
     const k = D.MYSTERY.table[D.pickWeighted(D.MYSTERY.table.map(x => x[1]), rnd)][0], rw = {};
     if (k === 'money') rw.money = Math.round(Math.max(20000, PL.mps(G, P, false).total * 400));
     if (k === 'potion') rw.potion = D.POTIONS[(rnd() * D.POTIONS.length) | 0].id;
-    if (k === 'egg2' || k === 'egg5') rw.egg = k;
     if (k === 'cosmetic') { const list = D.COSMETICS.filter(c => c.src === 'shop'); rw.cos = list[(rnd() * list.length) | 0].id; }
     if (k === 'rod') { const owned = Math.max(...P.d.rods.map(r => D.ROD[r].i)); const up = D.RODS[Math.min(D.RODS.length - 1, owned + 1 + (rnd() < 0.15 ? 1 : 0))]; if (P.d.rods.includes(up.id)) rw.money = Math.round(Math.max(50000, PL.mps(G, P, false).total * 900)); else rw.rod = up.id; }
     G.db.tx(() => { P.d.boxes--; const got = PL.grant(G, P, rw, null); PL.save(G, P); G.sync(P); send(s, { t: 'boxOpen', k, got }); });
@@ -4535,7 +4538,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     popup('❓', 'How to play', '<div class="rc-help"><ul style="margin:0 0 10px;padding-left:18px">' +
       '<li><kbd>Click</kbd>the game to look around with the mouse. <kbd>Esc</kbd>frees the mouse.</li>' +
       '<li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>walk, <kbd>Shift</kbd>run, <kbd>Space</kbd>jump.</li>' +
-      '<li><kbd>E</kbd>use the stations in the lobby: shop, eggs, rat bank, rooms and more.</li>' +
+      '<li><kbd>E</kbd>use the stations in the lobby: shop, rat bank, rooms and more.</li>' +
       '<li>Walk into a glowing portal to visit a field. Better fields open as you level up.</li>' +
       '<li>In a field, point at a rat and <kbd>Click</kbd>to cast. Keep it in your sights while you reel it in!</li>' +
       '<li>Put rats in <b>money slots</b> at the Rat Bank (<kbd>B</kbd>). They earn money every second, even a little while you are offline.</li>' +
@@ -5436,7 +5439,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     if (rw.cos) o.push(COS[rw.cos].n); if (rw.rod) o.push(rw.rod === 'next' ? 'A better rod' : ROD[rw.rod].n); if (rw.title) o.push('Title “' + rw.title + '”'); if (rw.mystery) o.push('Mystery Box'); if (rw.tokens) o.push(rw.tokens + ' tokens'); return o.join(' + ');
   }
   function openStation(id) {
-    const f = { shop: () => openShop(), eggs: openEggs, bank: openBank, inventory: () => openInventory('inv'), storage: () => openInventory('sto'), daily: () => openDaily('daily'), achievements: openAch, index: openIndex, leaderboard: openLeaders, events: openEvents, computer: openRooms, trading: openTrading, rebirth: openRebirth }[id];
+    const f = { shop: () => openShop(), bank: openBank, inventory: () => openInventory('inv'), storage: () => openInventory('sto'), daily: () => openDaily('daily'), achievements: openAch, index: openIndex, leaderboard: openLeaders, events: openEvents, computer: openRooms, trading: openTrading, rebirth: openRebirth }[id];
     if (f) f();
   }
   const untilUtcMidnight = () => (Math.floor(srvNow() / 86400000) + 1) * 86400000 - srvNow();
@@ -5487,7 +5490,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   }
 
   // ---------- Rat Index ----------
-  const IDX_RW = { 10: '$5,000 + Luck Potion', 25: '$50,000 + 3× $2 Egg', 50: '$2.5M + Super Luck', 75: '$100M + $5 Egg', 100: '$1B + Ultra Luck' };
+  const IDX_RW = { 10: '$5,000 + Luck Potion', 25: '$50,000 + Luck Potion + Mystery Box', 50: '$2.5M + Super Luck', 75: '$100M + Super Luck', 100: '$1B + Ultra Luck' };
   function openIndex() {
     openWin('index', { title: 'Rat Index', icon: '📖', color: '#3fa9ff', st: { rar: '', show: '', sel: null },
       subf() { const n = SPECIES.filter(s => (S.me.d.index[s.id] || {}).n > 0).length; return n + ' of ' + SPECIES.length + ' rats found (' + Math.floor(n / SPECIES.length * 100) + '%)'; },
@@ -5495,7 +5498,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
         const ix = S.me.d.index, st = W.st, found = id => ix[id] && ix[id].n > 0;
         if (st.sel) { const s = SP[st.sel], e = ix[s.id], rr = RI[s.r];
           b.innerHTML = '<div class="rc-row" style="margin-bottom:12px"><button class="rc-b sm" data-act="back">← Back</button></div><div class="rc-det"><div class="pic" style="--rc:' + rr.col + '">' + ratImg({ sp: s.id }) + '</div><div style="display:grid;gap:10px;align-content:start"><h3>' + esc(s.n) + '</h3><div class="rc-row">' + rarPill(s.r) + (s.inv ? '<span class="rc-pill" style="--c:#ffb0b0">Invasion rat</span>' : '') + (s.secret ? '<span class="rc-pill" style="--c:#ff9af0">Secret</span>' : '') + '</div>' +
-            '<p class="rc-note">' + esc(s.d) + '</p><div class="rc-break"><div><span>Caught or hatched</span><b>' + fmtN(e.n) + '×</b></div><div><span>Base earnings</span><b>' + fmtMoney(RC.baseEarn(S.cfg, s.id), true) + '/s</b></div><div><span>Lives in</span><b>' + (s.inv ? 'Any field, during invasions' : s.fields.length ? s.fields.map(f => FI[f] ? FI[f].n : f).join(', ') : 'Eggs and special events') + '</b></div></div>' +
+            '<p class="rc-note">' + esc(s.d) + '</p><div class="rc-break"><div><span>Caught</span><b>' + fmtN(e.n) + '×</b></div><div><span>Base earnings</span><b>' + fmtMoney(RC.baseEarn(S.cfg, s.id), true) + '/s</b></div><div><span>Lives in</span><b>' + (s.inv ? 'Any field, during invasions' : s.fields.length ? s.fields.map(f => FI[f] ? FI[f].n : f).join(', ') : 'Eggs and special events') + '</b></div></div>' +
             '<div class="rc-h3">Variants found</div><div class="rc-row">' + (Object.keys(e.m || {}).length ? Object.keys(e.m).map(k => k.startsWith('evo') ? '<span class="rc-pill" style="--c:#ffe9a8">Evolution ' + k.slice(3) + '</span>' : '<span class="rc-pill" style="--c:' + MUTATIONS[k].col + '">' + MUTATIONS[k].n + '</span>').join('') : '<span class="rc-note">Only the normal kind so far.</span>') + '</div></div></div>';
           return; }
         const n = SPECIES.filter(s => found(s.id)).length, pct = n / SPECIES.length * 100;

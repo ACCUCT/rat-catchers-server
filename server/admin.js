@@ -89,7 +89,6 @@ function create(G, dataDir) {
     const P = f.P, rw = {};
     if (m.money) { const v = +m.money; if (!isFinite(v)) return { t: 'err', text: 'Bad amount.' }; G.db.tx(() => { PL.addMoney(G, P, v, false); PL.save(G, P); }); }
     if (m.kind === 'potion' && D.POT[m.id]) { P.d.potions[m.id] = (P.d.potions[m.id] || 0) + Math.max(1, m.n | 0); }
-    if (m.kind === 'egg' && D.EGG[m.id]) { P.d.eggs[m.id] = (P.d.eggs[m.id] || 0) + Math.max(1, m.n | 0); }
     if (m.kind === 'rod' && D.ROD[m.id] && !P.d.rods.includes(m.id)) P.d.rods.push(m.id);
     if (m.kind === 'cos' && D.COS[m.id]) P.d.cos[m.id] = (P.d.cos[m.id] || 0) + Math.max(1, m.n | 0);
     if (m.kind === 'box') P.d.boxes += Math.max(1, m.n | 0);

@@ -68,17 +68,17 @@ const SP = {}; SPECIES.forEach((s, i) => { s.i = i; SP[s.id] = s; });
 // ---------- fields ----------
 // w: spawn weight per rarity index (common .. secret).
 const FIELDS = [
-  { id: 'meadow', n: 'Starter Meadow', lvl: 1, w: [70, 24, 5, 1, 0, 0, 0, 0, 0, 0], song: 'meadow', d: 'Sunny hills, wildflowers and lots of friendly rats.' },
-  { id: 'clover', n: 'Clover Fields', lvl: 5, w: [45, 33, 15, 5.5, 1.5, 0, 0, 0, 0, 0], song: 'clover', d: 'Rolling clover, windmills and lucky breezes.' },
-  { id: 'mushroom', n: 'Mushroom Forest', lvl: 10, w: [25, 32, 25, 12, 4.5, 1.5, 0, 0, 0, 0], song: 'mushroom', d: 'Giant glowing mushrooms under a dark green canopy.' },
-  { id: 'crystal', n: 'Crystal Caves', lvl: 20, w: [8, 22, 32, 23, 10, 4, 1, 0, 0, 0], song: 'crystal', d: 'A huge cavern full of humming crystals.' },
-  { id: 'frozen', n: 'Frozen Valley', lvl: 30, w: [0, 10, 25, 30, 20, 10, 4.5, 0.5, 0, 0], song: 'frozen', d: 'Snowy pines, a frozen lake and the northern lights.' },
-  { id: 'lava', n: 'Lava Lands', lvl: 40, w: [0, 0, 12, 25, 30, 20, 10, 2.8, 0.2, 0], song: 'lava', d: 'Black rock, rivers of lava and a smoking volcano.' },
-  { id: 'heaven', n: "Heaven's Garden", lvl: 55, w: [0, 0, 0, 10, 25, 30, 25, 9, 1, 0], song: 'heaven', d: 'Gardens on the clouds behind the golden gates.' },
-  { id: 'omega', n: 'Omega Dimension', lvl: 75, w: [0, 0, 0, 0, 10, 20, 35, 30, 5, 0], song: 'omega', d: 'Floating shapes in a void that hums with power.' },
-  { id: 'secret', n: 'Secret Realm', lvl: 100, w: [0, 0, 0, 0, 0, 10, 30, 45, 15, 0], song: 'secret', d: 'Ancient ruins under a rainbow sky. Few have seen it.' },
+  { id: 'meadow', n: 'Starter Meadow', lvl: 1, w: [49.81989, 35, 11, 3, 0.8, 0.3, 0.08, 0.0001, 0.00001, 0], song: 'meadow', d: 'Sunny hills, wildflowers and lots of friendly rats.' },
+  { id: 'clover', n: 'Clover Fields', lvl: 5, w: [30, 32.79967, 30, 5, 1.5, 0.6, 0.1, 0.0003, 0.00003, 0], song: 'clover', d: 'Rolling clover, windmills and lucky breezes.' },
+  { id: 'mushroom', n: 'Mushroom Forest', lvl: 10, w: [25, 25, 36.44945, 10, 2.5, 0.8, 0.25, 0.0005, 0.00005, 0], song: 'mushroom', d: 'Giant glowing mushrooms under a dark green canopy.' },
+  { id: 'crystal', n: 'Crystal Caves', lvl: 20, w: [20.89925, 25, 30, 20, 3, 0.8, 0.3, 0.0007, 0.00005, 0], song: 'crystal', d: 'A huge cavern full of humming crystals.' },
+  { id: 'frozen', n: 'Frozen Valley', lvl: 30, w: [14.89914, 25, 30, 25, 4, 0.75, 0.35, 0.0008, 0.00006, 0], song: 'frozen', d: 'Snowy pines, a frozen lake and the northern lights.' },
+  { id: 'lava', n: 'Lava Lands', lvl: 40, w: [12.49892, 25, 30, 25, 6, 1, 0.5, 0.001, 0.00008, 0], song: 'lava', d: 'Black rock, rivers of lava and a smoking volcano.' },
+  { id: 'heaven', n: "Heaven's Garden", lvl: 55, w: [5, 10, 40, 34.2969, 8, 2, 0.7, 0.003, 0.0001, 0], song: 'heaven', d: 'Gardens on the clouds behind the golden gates.' },
+  { id: 'omega', n: 'Omega Dimension', lvl: 75, w: [0, 5, 30, 51.1949, 10, 3, 0.8, 0.005, 0.0001, 0], song: 'omega', d: 'Floating shapes in a void that hums with power.' },
+  { id: 'secret', n: 'Secret Realm', lvl: 100, w: [0, 0, 28.9925, 50, 15, 5, 1, 0.007, 0.0005, 0], song: 'secret', d: 'Ancient ruins under a rainbow sky. Few have seen it.' },
   // a special area that only reborn players can enter (rebirth unlocks it at any level)
-  { id: 'reborn', n: 'Reborn Sanctuary', lvl: 1, reb: 1, w: [0, 0, 12, 24, 28, 19, 10, 5, 2, 0], song: 'reborn', d: 'A hidden garden of pink crystals. Only reborn catchers may enter.' }];
+  { id: 'reborn', n: 'Reborn Sanctuary', lvl: 1, reb: 1, w: [72.7913, 0, 0, 5, 15, 6, 1.2, 0.008, 0.0007, 0], song: 'reborn', d: 'A hidden garden of pink crystals. Only reborn catchers may enter.' }];
 const FI = {}; FIELDS.forEach((f, i) => { f.i = i; FI[f.id] = f; });
 
 // ---------- mutations ----------
@@ -139,8 +139,8 @@ const EGGS = [
 const EGG = {}; EGGS.forEach(e => { EGG[e.id] = e; });
 
 // mystery box: can hold better rods
-const MYSTERY = { id: 'mystery', n: 'Mystery Box', price: 50000, d: 'Money, potions, eggs, cosmetics, and a chance at a better rod.',
-  table: [['money', 40], ['potion', 30], ['egg2', 14], ['cosmetic', 8], ['rod', 7], ['egg5', 1]] };
+const MYSTERY = { id: 'mystery', n: 'Mystery Box', price: 50000, d: 'Money, potions, cosmetics, and a chance at a better rod.',
+  table: [['money', 46], ['potion', 38], ['cosmetic', 9], ['rod', 7]] };
 
 // ---------- rat cosmetics ----------
 // slot: where it sits on the rat. cat: the shop category. src: how to get it (shop, achievement, daily, event, promo, rebirth).
@@ -200,21 +200,19 @@ const ACHIEVEMENTS = [
   { id: 'c1000', n: 'Catch 1,000 Rats', d: 'Catch 1,000 rats.', stat: 'caught', goal: 1000, rw: { money: 1000000, title: 'Rat Wrangler', cos: 'catchercap' } },
   { id: 'c10000', n: 'Catch 10,000 Rats', d: 'Catch 10,000 rats.', stat: 'caught', goal: 10000, rw: { money: 100000000, title: 'Rat Legend', potion: 'ultraluck' } },
   { id: 'firstmut', n: 'Something Shiny', d: 'Catch a rat with any mutation.', stat: 'mutCaught', goal: 1, rw: { money: 2500, potion: 'mutation' } },
-  { id: 'firstleg', n: 'First Legendary', d: 'Catch or hatch a Legendary rat.', stat: 'r_legendary', goal: 1, rw: { money: 25000, potion: 'superluck', title: 'Legend Finder' } },
-  { id: 'firstmyth', n: 'First Mythical', d: 'Catch or hatch a Mythical rat.', stat: 'r_mythical', goal: 1, rw: { money: 50000, cos: 'flameaura' } },
-  { id: 'firstapoc', n: 'First Apocryphal', d: 'Catch or hatch an Apocryphal rat.', stat: 'r_apocryphal', goal: 1, rw: { money: 250000, potion: 'supermoney' } },
-  { id: 'firstomega', n: 'First Omega', d: 'Catch or hatch an Omega rat.', stat: 'r_omega', goal: 1, rw: { money: 1000000, potion: 'ultraluck', title: 'Omega Hunter', cos: 'voidwings' } },
-  { id: 'firstgod', n: 'First God-like', d: 'Catch or hatch a God-like rat.', stat: 'r_godlike', goal: 1, rw: { money: 10000000, title: 'Godcatcher', cos: 'divinecrown' } },
+  { id: 'firstleg', n: 'First Legendary', d: 'Catch a Legendary rat.', stat: 'r_legendary', goal: 1, rw: { money: 25000, potion: 'superluck', title: 'Legend Finder' } },
+  { id: 'firstmyth', n: 'First Mythical', d: 'Catch a Mythical rat.', stat: 'r_mythical', goal: 1, rw: { money: 50000, cos: 'flameaura' } },
+  { id: 'firstapoc', n: 'First Apocryphal', d: 'Catch an Apocryphal rat.', stat: 'r_apocryphal', goal: 1, rw: { money: 250000, potion: 'supermoney' } },
+  { id: 'firstomega', n: 'First Omega', d: 'Catch an Omega rat.', stat: 'r_omega', goal: 1, rw: { money: 1000000, potion: 'ultraluck', title: 'Omega Hunter', cos: 'voidwings' } },
+  { id: 'firstgod', n: 'First God-like', d: 'Catch a God-like rat.', stat: 'r_godlike', goal: 1, rw: { money: 10000000, title: 'Godcatcher', cos: 'divinecrown' } },
   { id: 'firstsecret', n: 'First Secret', d: 'Find a Secret rat.', stat: 'r_secret', goal: 1, rw: { money: 50000000, title: 'Keeper of Secrets', cos: 'shadowaura' } },
   { id: 'index', n: 'Discover Every Rat', d: 'Fill every page of the Rat Index.', stat: 'indexN', goal: SPECIES.length, rw: { money: 500000000, title: 'Ratologist', cos: 'rainbowtrail' } },
-  { id: 'fields', n: 'Complete Every Field', d: 'Catch every native rat of all nine fields.', stat: 'fieldsDone', goal: FIELDS.length, rw: { money: 250000000, title: 'Explorer Supreme', egg: 'egg5' } },
+  { id: 'fields', n: 'Complete Every Field', d: 'Catch every native rat of all nine fields.', stat: 'fieldsDone', goal: FIELDS.length, rw: { money: 250000000, title: 'Explorer Supreme', potion: 'superluck' } },
   { id: 't1', n: 'First Trade', d: 'Complete a trade with another player.', stat: 'trades', goal: 1, rw: { money: 5000 } },
   { id: 't100', n: 'Complete 100 Trades', d: 'Complete 100 trades.', stat: 'trades', goal: 100, rw: { money: 5000000, title: 'Master Trader', cos: 'goldchain' } },
   { id: 'l10', n: 'Level 10', d: 'Reach player level 10.', stat: 'level', goal: 10, rw: { money: 5000, potion: 'money' } },
   { id: 'l50', n: 'Level 50', d: 'Reach player level 50.', stat: 'level', goal: 50, rw: { money: 5000000, title: 'Veteran' } },
   { id: 'l100', n: 'Reach Level 100', d: 'Reach player level 100.', stat: 'level', goal: 100, rw: { money: 1000000000, title: 'Centurion', cos: 'laurel' } },
-  { id: 'eggs10', n: 'Egg Cracker', d: 'Hatch 10 eggs.', stat: 'eggs', goal: 10, rw: { money: 10000, egg: 'egg2' } },
-  { id: 'eggs100', n: 'Egg Master', d: 'Hatch 100 eggs.', stat: 'eggs', goal: 100, rw: { money: 2500000, egg: 'egg5' } },
   { id: 'chests', n: 'Treasure Hunter', d: 'Open 25 treasure chests.', stat: 'chests', goal: 25, rw: { money: 100000, potion: 'luck' } },
   { id: 'rebirth1', n: 'Born Again', d: 'Rebirth for the first time.', stat: 'rebirths', goal: 1, rw: { title: 'Reborn', cos: 'rebirthcrown' } },
   { id: 'rebirth5', n: 'Phoenix Catcher', d: 'Rebirth 5 times.', stat: 'rebirths', goal: 5, rw: { title: 'Phoenix', cos: 'rebirthaura' } },
@@ -225,8 +223,8 @@ const ACH = {}; ACHIEVEMENTS.forEach(a => { ACH[a.id] = a; });
 
 // ---------- daily rewards (7-day cycle, the 7th is special) ----------
 const DAILY = [
-  { money: 1 }, { potion: 'luck' }, { egg: 'egg2', n: 2 }, { potion: 'money', money: 1 }, { mystery: 1, rod: 'next' }, { cos: 'chefhat', potion: 'catch' },
-  { special: 1, money: 5, egg: 'egg5', potion: 'superluck', cos: 'weeklycrown' }];
+  { money: 1 }, { potion: 'luck' }, { potion: 'catch', money: 1 }, { potion: 'money', money: 1 }, { mystery: 1, rod: 'next' }, { cos: 'chefhat', potion: 'catch' },
+  { special: 1, money: 5, potion: 'superluck', cos: 'weeklycrown' }];
 const DAILY_COS_ROTATION = ['chefhat', 'heartglasses', 'bubbletrail']; // day 6 cycles through these
 
 // ---------- daily quests ----------
@@ -237,7 +235,6 @@ const QUESTS = [
   { id: 'fields', d: 'Visit {n} different fields', stat: 'fieldsToday', n: [2, 3, 4] },
   { id: 'mutated', d: 'Catch a mutated rat', stat: 'mutCaught', n: [1, 1, 2] },
   { id: 'earn', d: 'Earn {money}', stat: 'earned', n: [1, 3, 6], money: 1 },
-  { id: 'eggs', d: 'Hatch {n} eggs', stat: 'eggs', n: [1, 3, 5] },
   { id: 'chest', d: 'Open {n} treasure chests', stat: 'chests', n: [1, 2, 3] },
   { id: 'trade', d: 'Complete a trade', stat: 'trades', n: [1, 1, 2] },
   { id: 'levelup', d: 'Level up rats {n} times', stat: 'ratLevels', n: [3, 6, 10] }];
@@ -246,7 +243,6 @@ const QUESTS = [
 // Stations stand on a ring around the plaza (angle in degrees: 0 is north, toward the field portals).
 const STATIONS = [
   { id: 'shop', n: 'Item Shop', a: 76, r: 24, key: 'Shop' },
-  { id: 'eggs', n: 'Egg Hatchery', a: 95, r: 24, key: 'Eggs' },
   { id: 'bank', n: 'Rat Bank', a: 114, r: 24, key: 'Money slots' },
   { id: 'inventory', n: 'Rat Inventory', a: 133, r: 24, key: 'Inventory' },
   { id: 'daily', n: 'Daily Rewards', a: 152, r: 25, key: 'Daily rewards' },
