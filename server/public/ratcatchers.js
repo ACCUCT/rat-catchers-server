@@ -5797,7 +5797,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     const r0 = win.performance ? win.performance.now() : 0;
     try { render(dt); } catch (e) { if (!errShown && win.console) { errShown = true; console.error('RAT CATCHERS render', e); } }
     if (r0) S.rms = S.rms * 0.9 + (win.performance.now() - r0) * 0.1; // time spent preparing a frame (for tests)
-    try { overlay(); hudFrame(dt); touchFrame(); voiceFrame(dt); matchTick(dt); hostedTick(); } catch (e) { if (!errShown && win.console) { errShown = true; console.error('RAT CATCHERS HUD', e); } }
+    try { overlay(); hudFrame(dt); touchFrame(); voiceFrame(dt); matchTick(dt); } catch (e) { if (!errShown && win.console) { errShown = true; console.error('RAT CATCHERS HUD', e); } }
     snapJobs(S.ready ? 2 : 4);
     endInput(); netTick(); audioTick(); qualityTick(Math.min(raw, 0.5));
   }
@@ -5809,10 +5809,12 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     if (srv) { NET.serverInput = srv; setTimeout(() => { showConn('Connecting…', String(srv).replace(/^wss?:\/\//, '')); connect(wsUrl(srv)); }, 50); } else serverScreen();
     raf = win.requestAnimationFrame(frame);
   }
+  // the online server is checked on a timer, so it also works while the game's tab is in the background
+  const hostIv = setInterval(() => { try { hostedTick(); } catch (e) { if (win.console) console.error('RAT CATCHERS online', e); } }, 1000);
   const ro = win.ResizeObserver ? new win.ResizeObserver(() => resize()) : null; if (ro) ro.observe(wrap);
   const api = {
     destroy() {
-      try { voiceOff(); } catch (e) {} alive = false; win.cancelAnimationFrame(raf); clearTimeout(NET.retry); NET.kicked = true;
+      try { voiceOff(); } catch (e) {} clearInterval(hostIv); alive = false; win.cancelAnimationFrame(raf); clearTimeout(NET.retry); NET.kicked = true;
       try { if (NET.ws) { nsend({ t: 'bye' }); NET.ws.close(); } } catch (e) {}
       inputOff(); if (ro) ro.disconnect(); try { if (AU.c) AU.c.close(); } catch (e) {}
       try { root.removeChild(wrap); } catch (e) {}
