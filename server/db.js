@@ -28,12 +28,14 @@ function open(dir) {
       lvl INTEGER NOT NULL DEFAULT 1, xp REAL NOT NULL DEFAULT 0, cap INTEGER NOT NULL DEFAULT 50, evo INTEGER NOT NULL DEFAULT 0,
       fav INTEGER NOT NULL DEFAULT 0, lock INTEGER NOT NULL DEFAULT 0,
       place TEXT NOT NULL DEFAULT 'inv', slot INTEGER NOT NULL DEFAULT -1,
-      cos TEXT NOT NULL DEFAULT '{}', born INTEGER NOT NULL, src TEXT);
+      cos TEXT NOT NULL DEFAULT '{}', born INTEGER NOT NULL, src TEXT, rev INTEGER NOT NULL DEFAULT 0);
     CREATE INDEX IF NOT EXISTS rats_owner ON rats(owner);
     CREATE TABLE IF NOT EXISTS trades (id INTEGER PRIMARY KEY AUTOINCREMENT, a INTEGER, b INTEGER, a_rats TEXT, b_rats TEXT, at INTEGER);
     CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER, who TEXT, action TEXT, detail TEXT);
   `);
+  // saves from before the Reverse mutation: add its column
+  try { if (!db.prepare('PRAGMA table_info(rats)').all().some(c => c.name === 'rev')) db.exec('ALTER TABLE rats ADD COLUMN rev INTEGER NOT NULL DEFAULT 0'); } catch (e) { console.error('could not add the rev column', e); }
   const st = {
     accByName: db.prepare('SELECT * FROM accounts WHERE name = ?'),
     accById: db.prepare('SELECT * FROM accounts WHERE id = ?'),
@@ -46,8 +48,8 @@ function open(dir) {
     plSave: db.prepare('UPDATE players SET money = ?, level = ?, xp = ?, rebirths = ?, caught = ?, trades = ?, rarity_score = ?, mutation_score = ?, data = ?, last_seen = ?, color = ? WHERE id = ?'),
     ratsOf: db.prepare('SELECT * FROM rats WHERE owner = ?'),
     ratGet: db.prepare('SELECT * FROM rats WHERE id = ?'),
-    ratInsert: db.prepare('INSERT INTO rats (id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
-    ratSave: db.prepare('UPDATE rats SET mut = ?, wx = ?, disco = ?, lvl = ?, xp = ?, cap = ?, evo = ?, fav = ?, lock = ?, place = ?, slot = ?, cos = ? WHERE id = ? AND owner = ?'),
+    ratInsert: db.prepare('INSERT INTO rats (id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src, rev) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+    ratSave: db.prepare('UPDATE rats SET mut = ?, wx = ?, disco = ?, lvl = ?, xp = ?, cap = ?, evo = ?, fav = ?, lock = ?, place = ?, slot = ?, cos = ?, rev = ? WHERE id = ? AND owner = ?'),
     ratOwner: db.prepare('UPDATE rats SET owner = ?, place = ?, slot = -1, fav = 0 WHERE id = ? AND owner = ? AND lock = 0'),
     ratDelete: db.prepare('DELETE FROM rats WHERE id = ? AND owner = ?'),
     tradeInsert: db.prepare('INSERT INTO trades (a, b, a_rats, b_rats, at) VALUES (?, ?, ?, ?, ?)'),

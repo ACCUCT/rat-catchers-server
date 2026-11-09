@@ -86,7 +86,7 @@ function create(G) {
   }
 
   // ---------- rats in the fields ----------
-  const ratNet = r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, st: r.st, ax: +r.ax.toFixed(2), az: +r.az.toFixed(2), bx: +r.bx.toFixed(2), bz: +r.bz.toFixed(2), t0: r.t0, t1: r.t1, by: r.by || 0, ev: r.ev || 0 });
+  const ratNet = r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, st: r.st, ax: +r.ax.toFixed(2), az: +r.az.toFixed(2), bx: +r.bx.toFixed(2), bz: +r.bz.toFixed(2), t0: r.t0, t1: r.t1, by: r.by || 0, ev: r.ev || 0 });
   const ratPos = (r, t) => { if (t >= r.t1 || r.t1 <= r.t0) return [r.bx, r.bz]; const k = (t - r.t0) / (r.t1 - r.t0); return [r.ax + (r.bx - r.ax) * k, r.az + (r.bz - r.az) * k]; };
   function luckRoller(a) { const ps = [...a.players]; return ps.length ? ps[(rnd() * ps.length) | 0] : null; }
   function spawnRat(a, forced) {
@@ -96,16 +96,24 @@ function create(G) {
     const roller = luckRoller(a), luck = roller ? PL.luckOf(G, roller.P) : 1;
     let sp = forced && forced.sp, rid;
     if (!sp) {
-      if (inv && rnd() < 0.5) { const list = D.SPECIES.filter(s => s.inv); sp = list[(rnd() * list.length) | 0].id; }
+      const ex = (ev.excl || []).find(x => rnd() < x.chance); // a running event's own rats
+      if (ex) sp = ex.rats[(rnd() * ex.rats.length) | 0];
+      else if (inv && rnd() < 0.5) { const list = D.SPECIES.filter(s => s.inv); sp = list[(rnd() * list.length) | 0].id; }
       else if (ev.secret && (a.id === 'omega' || a.id === 'secret') && rnd() < 0.004) { const list = D.SPECIES.filter(s => s.secret); sp = list[(rnd() * list.length) | 0].id; }
       else { const w = D.spawnWeights(G.cfg, a.id, luck, ev); rid = RARITIES[D.pickWeighted(w, rnd)].id; const list = D.speciesFor(rid, a.id); if (!list.length) return null; sp = list[(rnd() * list.length) | 0].id; }
     }
     const mp = roller && PL.eff(roller.P, 'mutation') ? PL.eff(roller.P, 'mutation').mult : 1;
     const m = forced && forced.muts ? forced.muts : D.rollMutations(G.cfg, ev, mp, rnd);
     const rr = RI[SP[sp].r], t = now();
-    const r = { id: (++ratSeq).toString(36), sp, mut: m.mut || null, wx: m.wx || null, disco: m.disco ? 1 : 0, ax: x, az: z, bx: x, bz: z, t0: t, t1: t, idle: t + 500 + rnd() * 2000, st: 'w', dies: t + rr.life * 1000 * (forced ? 2 : 1) * (inv ? 1.3 : 1), ev: forced ? 1 : (SP[sp].inv ? 2 : 0) };
+    if (forced && forced.near) { const q = forced.near; x = q.ax + (rnd() - 0.5) * 3; z = q.az + (rnd() - 0.5) * 3; if (D.blocked(L, x, z, 1.2)) { x = q.ax; z = q.az; } }
+    const long = forced && !forced.twin && !forced.ufo; // owner spawns stay longer
+    // ev: 1 owner spawn, 2 invader, 3 dropped by a UFO, 4 a twin, 5 an event's own rat
+    const r = { id: (++ratSeq).toString(36), sp, mut: m.mut || null, wx: m.wx || null, disco: m.disco ? 1 : 0, rev: m.rev ? 1 : 0, ax: x, az: z, bx: x, bz: z, t0: t, t1: t, idle: t + (forced && forced.ufo ? 3200 : 500) + rnd() * 2000, st: 'w', dies: t + rr.life * 1000 * (long ? 2 : 1) * (inv || (forced && forced.ufo) ? 1.3 : 1),
+      ev: forced && forced.ufo ? 3 : forced && forced.twin ? 4 : forced ? 1 : SP[sp].inv ? 2 : SP[sp].evx ? 5 : 0 };
+    const dbl = !forced && ev.double > 0 && rnd() < ev.double; if (dbl && !r.ev) r.ev = 4; // Double Trouble: it comes with a twin
     a.rats.set(r.id, r); a.out.rs.push(ratNet(r));
-    if (rr.i >= 7 && !forced) G.events.rareSpawn && G.events.rareSpawn(a, r);
+    if ((rr.i >= 7 || SP[sp].evx) && (!forced || forced.ufo)) G.events.rareSpawn && G.events.rareSpawn(a, r);
+    if (dbl) spawnRat(a, { sp, twin: 1, near: r });
     return r;
   }
   G.spawnRat = spawnRat;
@@ -159,11 +167,11 @@ function create(G) {
     const r = a.rats.get(c.id); s.catching = null; if (!r || r.st !== 'h' || r.by !== P.id) return send(s, { t: 'miss', why: 'It got away.' });
     if (rnd() < catchOdds(P, r)) {
       const rat = G.db.tx(() => {
-        const got = PL.giveRat(G, P, { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco }, 'catch');
+        const got = PL.giveRat(G, P, { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev }, 'catch');
         if (!got) return null;
         P.caught++; const rr = RI[SP[r.sp].r]; PL.bump(G, P, 'caught');
         if (rr.i >= 2) PL.bump(G, P, 'caughtRare');
-        if (r.mut || r.wx || r.disco) PL.bump(G, P, 'mutCaught');
+        if (r.mut || r.wx || r.disco || r.rev) PL.bump(G, P, 'mutCaught');
         PL.addXP(G, P, rr.xp * (r.mut ? 2 : 1));
         PL.checkAch(G, P); PL.save(G, P); return got;
       });
@@ -227,7 +235,7 @@ function create(G) {
       for (const aid in room.areas) {
         const a = room.areas[aid]; if (!a.players.size) continue;
         if (a.field) {
-          const inv = G.events.invasion(), max = Math.round(G.cfg.maxRatsPerField * (inv ? 2.5 : 1)), every = G.cfg.spawnEvery * 1000 / (inv ? 3 : 1);
+          const inv = G.events.invasion(), sm = Math.max(0.1, G.events.effects().spawnMult || 1), max = Math.round(G.cfg.maxRatsPerField * (inv ? 2.5 : 1) * Math.min(2, sm)), every = G.cfg.spawnEvery * 1000 / (inv ? 3 : 1) / sm;
           if (a.rats.size < max && t - a.spawnT > every) { a.spawnT = t; spawnRat(a); }
           for (const r of a.rats.values()) {
             if (r.st === 'h') { const s = [...a.players].find(x => x.P.id === r.by); if (!s || !s.catching || t > s.catching.start + s.catching.dur * 1000 + 15000) { if (s) { s.catching = null; send(s, { t: 'miss', why: 'It wriggled free.' }); } r.st = 'w'; r.by = 0; r.idle = t; } continue; }
@@ -585,7 +593,7 @@ function create(G) {
     if (eaten.some(r => r.fav) && !m.confirm) return send(s, { t: 'confirm', what: 'evolve', ids: list.map(r => r.id), text: 'Two of these rats will be combined into one. One of them is a favorite. Continue?' });
     const rank = { rainbow: 3, diamond: 2, gold: 1 };
     G.db.tx(() => {
-      for (const r of eaten) { if (!a.mut || (rank[r.mut] || 0) > (rank[a.mut] || 0)) a.mut = r.mut || a.mut; if (!a.wx && r.wx) a.wx = r.wx; if (r.disco) a.disco = 1; a.lvl = Math.max(a.lvl, r.lvl); a.cap = Math.max(a.cap, r.cap); PL.removeRat(G, P, r); }
+      for (const r of eaten) { if (!a.mut || (rank[r.mut] || 0) > (rank[a.mut] || 0)) a.mut = r.mut || a.mut; if (!a.wx && r.wx) a.wx = r.wx; if (r.disco) a.disco = 1; if (r.rev) a.rev = 1; a.lvl = Math.max(a.lvl, r.lvl); a.cap = Math.max(a.cap, r.cap); PL.removeRat(G, P, r); }
       a.evo++; PL.saveRat(G, P, a); PL.discover(G, P, a); PL.bump(G, P, 'evolved'); PL.checkAch(G, P); PL.save(G, P);
     });
     send(s, { t: 'evolved', rat: PL.ratView(a), gone: eaten.map(r => r.id) }); G.sendRats(P, [a], eaten.map(r => r.id)); if (a.place === 'eq') petsChanged(s);

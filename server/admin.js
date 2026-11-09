@@ -61,15 +61,15 @@ function create(G, dataDir) {
   }
 
   const C = {}; // admin commands
-  C.state = () => ({ t: 'state', keyOnly, over: G.cfgOver || {}, online: [...G.sessions].filter(s => s.P).length, rooms: [...G.rooms.values()].map(r => Object.assign(G.roomInfo(r), { areas: Object.fromEntries(Object.entries(r.areas).filter(([, a]) => a.players.size).map(([k, a]) => [k, a.players.size])) })),
-    events: G.events.state(), cfg: G.cfg, defaults: D.DEFAULT_CONFIG, species: D.SPECIES.map(s => ({ id: s.id, n: s.n, r: s.r, earn: D.baseEarn(G.cfg, s.id), own: G.cfg.speciesEarn[s.id] != null, secret: !!s.secret, inv: !!s.inv })),
+  C.state = () => ({ t: 'state', keyOnly, over: G.cfgOver || {}, spl: D.SPECIES.map(s => [s.id, s.n, D.RI[s.r].n + (s.evx ? ' · ' + s.evx + ' event' : s.inv ? ' · invasion' : '')]), online: [...G.sessions].filter(s => s.P).length, rooms: [...G.rooms.values()].map(r => Object.assign(G.roomInfo(r), { areas: Object.fromEntries(Object.entries(r.areas).filter(([, a]) => a.players.size).map(([k, a]) => [k, a.players.size])) })),
+    events: G.events.state(), cfg: G.cfg, defaults: D.DEFAULT_CONFIG, species: D.SPECIES.map(s => ({ id: s.id, n: s.n, r: s.r, earn: D.baseEarn(G.cfg, s.id), own: G.cfg.speciesEarn[s.id] != null, secret: !!s.secret, inv: !!s.inv, evx: s.evx || '' })),
     ann: G.events.all().slice(-15), audit: G.db.st.auditList.all(40), backups: G.listBackups(), keyFile: G.ownerKeyFile, ver: D.VERSION });
   C.event = (m, who) => { const ok = m.on ? G.events.start(m.id, m.dur | 0, who) : G.events.stop(m.id, who); audit(who, m.on ? 'event start' : 'event stop', m); return { t: 'ok', text: ok ? 'Done.' : 'Unknown event.' }; };
   C.eventDur = (m, who) => { if (!D.EVENTS[m.id]) return { t: 'err', text: 'Unknown event.' }; const e = setCfg({ eventDur: { [m.id]: Math.max(30, Math.min(86400, m.dur | 0)) } }, who); return e ? { t: 'err', text: e } : { t: 'ok', text: 'Event length saved.' }; };
   C.announce = (m, who) => { const a = G.events.announce({ kind: m.kind, text: m.text, col: m.col, sound: m.sound, dur: m.dur, by: who }); audit(who, 'announce', a); return { t: 'ok', text: 'Sent to every room.' }; };
   C.spawn = (m, who) => {
     const sp = D.SP[m.sp]; if (!sp) return { t: 'err', text: 'Unknown rat.' };
-    const muts = { mut: ['gold', 'diamond', 'rainbow'].includes(m.mut) ? m.mut : null, wx: ['rain', 'snow', 'thunder'].includes(m.wx) ? m.wx : null, disco: m.disco ? 1 : 0 };
+    const muts = { mut: ['gold', 'diamond', 'rainbow'].includes(m.mut) ? m.mut : null, wx: D.WXM.includes(m.wx) ? m.wx : null, disco: m.disco ? 1 : 0, rev: m.rev ? 1 : 0 };
     const n = Math.max(1, Math.min(20, m.n | 0 || 1)); let made = 0;
     for (const room of G.rooms.values()) {
       if (m.room && m.room !== 'all' && room.code !== m.room) continue;
@@ -93,7 +93,7 @@ function create(G, dataDir) {
     if (m.kind === 'cos' && D.COS[m.id]) P.d.cos[m.id] = (P.d.cos[m.id] || 0) + Math.max(1, m.n | 0);
     if (m.kind === 'box') P.d.boxes += Math.max(1, m.n | 0);
     if (m.kind === 'tokens') P.d.tokens += Math.max(1, m.n | 0);
-    if (m.kind === 'rat' && D.SP[m.id]) { const r = G.db.tx(() => PL.giveRat(G, P, { sp: m.id, mut: m.mut || null, wx: m.wx || null, disco: m.disco ? 1 : 0 }, 'owner')); if (!r) return { t: 'err', text: P.name + ' has no room for another rat.' }; if (f.sess) G.sendRats(P, [r]); }
+    if (m.kind === 'rat' && D.SP[m.id]) { const r = G.db.tx(() => PL.giveRat(G, P, { sp: m.id, mut: ['gold', 'diamond', 'rainbow'].includes(m.mut) ? m.mut : null, wx: D.WXM.includes(m.wx) ? m.wx : null, disco: m.disco ? 1 : 0, rev: m.rev ? 1 : 0 }, 'owner')); if (!r) return { t: 'err', text: P.name + ' has no room for another rat.' }; if (f.sess) G.sendRats(P, [r]); }
     if (m.kind === 'title' && m.id) { const t = String(m.id).slice(0, 30); if (!P.d.titles.includes(t)) P.d.titles.push(t); }
     void rw; P.dirty = true; G.db.tx(() => PL.save(G, P));
     if (f.sess) { G.sync(P); G.toast(P, { kind: 'reward', text: 'A gift from the owner!', sub: [m.money ? D.fmtMoney(+m.money) : '', m.kind ? (m.n > 1 ? m.n + 'x ' : '') + (m.kind === 'rat' ? D.SP[m.id].n : m.id) : ''].filter(Boolean).join(' · ') }); }

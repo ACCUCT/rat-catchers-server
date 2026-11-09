@@ -12,6 +12,7 @@ function create(G) {
     if (!E.nextInv) E.nextInv = t + 1000 * (c.invasionEvery[0] + rnd() * (c.invasionEvery[1] - c.invasionEvery[0]));
   }
   const durOf = id => (G.cfg.eventDur && G.cfg.eventDur[id]) || D.EVENTS[id].dur;
+  const ecfg = id => D.evCfg(G.cfg, id);
   function weather() {
     if (E.weather) return E.weather;
     const ids = live().map(e => e.id);
@@ -33,7 +34,8 @@ function create(G) {
     const ex = E.active.find(e => e.id === id && e.ends > t);
     if (ex) ex.ends = Math.max(ex.ends, ends); else E.active.push({ id, ends, by: by || '' });
     E.active = E.active.filter(e => e.ends > t);
-    announce({ kind: 'event', text: d.n + ' has started! ' + d.d, col: d.col, dur: 8, by });
+    announce({ kind: 'event', text: d.n + ' has started! ' + D.evDesc(G.cfg, id), col: d.col, dur: 8, sound: id === 'alien' ? 'siren' : null, by });
+    if (id === 'alien' || id === 'ultra') E.nextDrop = t + 4000;
     push(); return true;
   }
   function stop(id, by) { const before = E.active.length; E.active = E.active.filter(e => e.id !== id); if (E.active.length !== before) { announce({ kind: 'event', text: D.EVENTS[id].n + ' has ended.', col: D.EVENTS[id].col, dur: 5, by }); push(); } return true; }
@@ -51,17 +53,32 @@ function create(G) {
     if (E.inv && E.inv.ends <= t) { E.inv = null; ch = true; announce({ kind: 'event', text: 'The rat invasion is over.', col: '#ff3a5c', dur: 6 }); }
     if (!E.nextEvent) schedule(t);
     if (G.cfg.autoEvents && t >= E.nextEvent) {
-      const ids = Object.keys(D.EVENTS).filter(k => k !== 'ultra'), pick = rnd() < 0.06 ? 'ultra' : ids[(rnd() * ids.length) | 0];
-      if (G.sessions.size) start(pick, 0, 'auto'); E.nextEvent = 0; schedule(t);
+      const ids = Object.keys(D.EVENTS).filter(k => k !== 'ultra' && ecfg(k).auto !== false), pick = rnd() < 0.06 && ecfg('ultra').auto !== false ? 'ultra' : ids[(rnd() * ids.length) | 0];
+      if (G.sessions.size && pick) start(pick, 0, 'auto'); E.nextEvent = 0; schedule(t);
     }
     if (G.cfg.autoInvasions && E.nextInv && t >= E.nextInv) { if (G.sessions.size && !E.inv) startInvasion(0, 'auto'); E.nextInv = t + 1000 * (G.cfg.invasionEvery[0] + rnd() * (G.cfg.invasionEvery[1] - G.cfg.invasionEvery[0])); }
+    // Alien Invasion: UFOs beam the event's rats down into fields where people are playing
+    const alien = live().find(e => e.id === 'alien');
+    if (alien && G.spawnRat) {
+      const c = ecfg('alien'), dr = c.drop || D.EVENTS.alien.drop, every = Math.max(5, +dr.every || 25) * 1000;
+      if (!E.nextDrop) E.nextDrop = t + 4000;
+      if (t >= E.nextDrop) {
+        E.nextDrop = t + every;
+        const rats = (c.rats && c.rats.length ? c.rats : D.EVENTS.alien.rats).filter(s => D.SP[s]);
+        if (rats.length) for (const room of G.rooms.values()) {
+          const areas = Object.values(room.areas).filter(a => a.field && a.players.size); if (!areas.length) continue;
+          for (let i = 0; i < Math.max(1, Math.min(10, +dr.n || 2)); i++) { const a = areas[(rnd() * areas.length) | 0]; G.spawnRat(a, { sp: rats[(rnd() * rats.length) | 0], ufo: 1 }); }
+        }
+      }
+    } else E.nextDrop = 0;
     if (ch) push();
   }
   function rareSpawn(a, r) { // let players in that field know something special turned up
     const s = D.SP[r.sp], rr = D.RI[s.r];
-    for (const p of a.players) G.send(p, { t: 'toast', kind: 'rare', text: D.aName(rr.n + ' rat').replace(/^./, c => c.toUpperCase()) + ' appeared nearby!', sub: 'Look for the ' + rr.n.toLowerCase() + ' glow.', col: rr.col });
+    const text = r.ev === 3 ? 'A UFO beamed down ' + D.aName(s.n) + '!' : s.evx ? D.aName(s.n).replace(/^./, c => c.toUpperCase()) + ' appeared nearby!' : D.aName(rr.n + ' rat').replace(/^./, c => c.toUpperCase()) + ' appeared nearby!';
+    for (const p of a.players) G.send(p, { t: 'toast', kind: 'rare', text, sub: r.ev === 3 ? 'Look for the green beam of light.' : 'Look for the ' + rr.n.toLowerCase() + ' glow.', col: rr.col });
   }
-  G.events = { effects: () => D.mergeEvents(live()), active: live, invasion: () => !!(E.inv && E.inv.ends > now()), state, recent: () => E.ann.filter(a => now() - a.at < 60000).slice(-3),
+  G.events = { effects: () => D.mergeEvents(live(), G.cfg), active: live, invasion: () => !!(E.inv && E.inv.ends > now()), state, recent: () => E.ann.filter(a => now() - a.at < 60000).slice(-3),
     start, stop, startInvasion, stopInvasion, setWeather, announce, tick, rareSpawn, push, all: () => E.ann.slice() };
 }
 module.exports = { create };

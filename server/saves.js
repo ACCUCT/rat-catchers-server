@@ -3,7 +3,7 @@
 // device; they bring it when they connect, and the server sends it back every few seconds while they play.
 const D = require('../shared/data.js');
 const PL_NUM = ['money', 'level', 'xp', 'rebirths', 'caught', 'trades', 'rarity_score', 'mutation_score', 'last_seen'];
-const RAT_NUM = ['disco', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
+const RAT_NUM = ['disco', 'rev', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
 // check a save that came from a device: right shapes, sane numbers, known rats
 function clean(b) {
   if (!b || typeof b !== 'object' || !b.pl || !Array.isArray(b.rats) || b.rats.length > 6000) return null;
@@ -29,6 +29,6 @@ function writeAcc(G, id, b) {
   if (!st.plGet.get(id)) st.plInsert.run(id, p.money, p.data, p.last_seen, p.color);
   st.plSave.run(p.money, p.level, p.xp, p.rebirths, p.caught, p.trades, p.rarity_score, p.mutation_score, p.data, p.last_seen, p.color, id);
   for (const r of st.ratsOf.all(id)) st.ratDelete.run(r.id, id);
-  for (const r of b.rats) { if (st.ratGet.get(r.id)) continue; st.ratInsert.run(r.id, id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, r.cos, r.born, r.src); } // a rat someone else owns now stays theirs
+  for (const r of b.rats) { if (st.ratGet.get(r.id)) continue; st.ratInsert.run(r.id, id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, r.cos, r.born, r.src, r.rev ? 1 : 0); } // a rat someone else owns now stays theirs
 }
 module.exports = { clean, exportAcc, writeAcc };

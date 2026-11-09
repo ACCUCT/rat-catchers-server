@@ -81,7 +81,7 @@ function create(G) {
         };
         for (const r of ra) move(A, B, r); for (const r of rb) move(B, A, r);
         A.trades++; B.trades++; PL.bump(G, A, 'trades'); PL.bump(G, B, 'trades');
-        G.db.st.tradeInsert.run(A.id, B.id, JSON.stringify(ra.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, evo: r.evo }))), JSON.stringify(rb.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, evo: r.evo }))), now());
+        G.db.st.tradeInsert.run(A.id, B.id, JSON.stringify(ra.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, evo: r.evo }))), JSON.stringify(rb.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, evo: r.evo }))), now());
         PL.checkAch(G, A); PL.checkAch(G, B); PL.save(G, A); PL.save(G, B);
         return { ra, rb };
       });

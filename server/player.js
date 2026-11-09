@@ -12,9 +12,9 @@ function newData() {
   return { rods: ['wood'], rod: 'wood', potions: {}, eff: {}, eggs: {}, boxes: 0, snacks: 0, slots: 0, storage: 0, inv: 0, equip: 0, cos: {}, ach: {}, titles: [], title: '',
     daily: { streak: 0, last: -1 }, quests: { day: -1, list: [] }, index: {}, idxMs: [], stats: {}, showcase: { rats: [], theme: 'classic' }, tokens: 0, fieldsVisited: {}, joined: Date.now() };
 }
-function ratFromRow(r) { let cos = {}; try { cos = JSON.parse(r.cos || '{}'); } catch (e) {} return { id: r.id, sp: r.sp, mut: r.mut || null, wx: r.wx || null, disco: r.disco ? 1 : 0, lvl: r.lvl, xp: r.xp, cap: r.cap, evo: r.evo, fav: r.fav ? 1 : 0, lock: r.lock ? 1 : 0, place: r.place, slot: r.slot, cos, born: r.born, src: r.src }; }
-function ratView(r) { return { id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, xp: Math.floor(r.xp), cap: r.cap, evo: r.evo, fav: r.fav, lock: r.lock, place: r.place, slot: r.slot, cos: r.cos, born: r.born }; }
-function lookView(r) { return { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, evo: r.evo, lvl: r.lvl, cos: r.cos }; }
+function ratFromRow(r) { let cos = {}; try { cos = JSON.parse(r.cos || '{}'); } catch (e) {} return { id: r.id, sp: r.sp, mut: r.mut || null, wx: r.wx || null, disco: r.disco ? 1 : 0, rev: r.rev ? 1 : 0, lvl: r.lvl, xp: r.xp, cap: r.cap, evo: r.evo, fav: r.fav ? 1 : 0, lock: r.lock ? 1 : 0, place: r.place, slot: r.slot, cos, born: r.born, src: r.src }; }
+function ratView(r) { return { id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, xp: Math.floor(r.xp), cap: r.cap, evo: r.evo, fav: r.fav, lock: r.lock, place: r.place, slot: r.slot, cos: r.cos, born: r.born }; }
+function lookView(r) { return { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, evo: r.evo, lvl: r.lvl, cos: r.cos }; }
 
 function load(G, acc) {
   const row = G.db.st.plGet.get(acc.id); if (!row) return null;
@@ -31,7 +31,7 @@ function load(G, acc) {
 }
 function scores(P) {
   let rs = 0, ms = 0;
-  for (const r of P.rats.values()) { const s = SP[r.sp]; if (!s) continue; rs += RI[s.r].pts * (1 + (r.evo || 0)); for (const m of [r.mut, r.wx, r.disco ? 'disco' : null]) if (m) ms += MUTATIONS[m].pts; }
+  for (const r of P.rats.values()) { const s = SP[r.sp]; if (!s) continue; rs += RI[s.r].pts * (1 + (r.evo || 0)); for (const m of [r.mut, r.wx, r.disco ? 'disco' : null, r.rev ? 'reverse' : null]) if (m && MUTATIONS[m]) ms += MUTATIONS[m].pts; }
   return [rs, ms];
 }
 function save(G, P) {
@@ -39,7 +39,7 @@ function save(G, P) {
   G.db.st.plSave.run(P.money, P.level, P.xp, P.rebirths, P.caught, P.trades, rs, ms, JSON.stringify(P.d), P.online ? Date.now() : P.last_seen, P.color, P.id);
   P.dirty = false;
 }
-function saveRat(G, P, r) { G.db.st.ratSave.run(r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, JSON.stringify(r.cos || {}), r.id, P.id); }
+function saveRat(G, P, r) { G.db.st.ratSave.run(r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, JSON.stringify(r.cos || {}), r.rev ? 1 : 0, r.id, P.id); }
 
 // ---------- capacity ----------
 const cap = (G, P) => ({ slots: G.cfg.startSlots + P.d.slots, storage: G.cfg.startStorage + P.d.storage * G.cfg.storageStep, inv: G.cfg.startInventory + P.d.inv * G.cfg.inventoryStep, equip: G.cfg.startEquip + P.d.equip });
@@ -81,7 +81,7 @@ function addXP(G, P, xp) {
 // ---------- Rat Index ----------
 function discover(G, P, r) {
   const e = P.d.index[r.sp] || (P.d.index[r.sp] = { n: 0, m: {} }); const isNew = !e.n; e.n++;
-  for (const m of [r.mut, r.wx, r.disco ? 'disco' : null]) if (m) e.m[m] = 1;
+  for (const m of [r.mut, r.wx, r.disco ? 'disco' : null, r.rev ? 'reverse' : null]) if (m) e.m[m] = 1;
   if (r.evo) e.m['evo' + r.evo] = 1;
   const s = SP[r.sp]; if (s) { P.d.stats['r_' + s.r] = (P.d.stats['r_' + s.r] || 0) + 1; }
   if (isNew) {
@@ -172,8 +172,8 @@ function claimQuest(G, P, i) {
 // ---------- new rats ----------
 function giveRat(G, P, spec, src, opts) {
   opts = opts || {}; const place = opts.place || roomFor(G, P); if (!place) return null;
-  const r = { id: newId(), sp: spec.sp, mut: spec.mut || null, wx: spec.wx || null, disco: spec.disco ? 1 : 0, lvl: 1, xp: 0, cap: G.cfg.ratMaxLevel, evo: spec.evo || 0, fav: 0, lock: 0, place, slot: -1, cos: {}, born: Date.now(), src: src || '' };
-  G.db.st.ratInsert.run(r.id, P.id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, 0, 0, r.place, -1, '{}', r.born, r.src);
+  const r = { id: newId(), sp: spec.sp, mut: spec.mut || null, wx: spec.wx || null, disco: spec.disco ? 1 : 0, rev: spec.rev ? 1 : 0, lvl: 1, xp: 0, cap: G.cfg.ratMaxLevel, evo: spec.evo || 0, fav: 0, lock: 0, place, slot: -1, cos: {}, born: Date.now(), src: src || '' };
+  G.db.st.ratInsert.run(r.id, P.id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, 0, 0, r.place, -1, '{}', r.born, r.src, r.rev);
   P.rats.set(r.id, r);
   discover(G, P, r);
   P.dirty = true; return r;

@@ -62,6 +62,12 @@ const SPECIES = [
   { id: 'ninja', n: 'Ninja Rat', r: 'superrare', earn: 750, inv: 1, d: 'You only see it when it wants you to.', fur: '#24242c', belly: '#3a3a44', parts: ['ninja'], fields: [] },
   { id: 'robo', n: 'Robo Rat', r: 'legendary', earn: 3000, inv: 1, d: 'Beep boop. Runs on cheese-powered batteries.', fur: '#b8c4d0', belly: '#e8eef4', eye: '#3affff', parts: ['robo'], fields: [] },
   { id: 'alien', n: 'Alien Rat', r: 'mythical', earn: 4500, inv: 1, d: 'Came from a planet made entirely of cheese. Wants to go home.', fur: '#7aff6a', belly: '#d8ffd0', eye: '#111111', parts: ['antennae'], fields: [] },
+  // event rats: only appear while their event runs (the owner can change which rats each event brings)
+  { id: 'aurorarat', n: 'Aurora Rat', r: 'legendary', earn: 2600, evx: 'aurora', d: 'Its fur ripples green and violet like the northern sky.', fur: '#1d5a6e', belly: '#8affd0', eye: '#7affc8', parts: ['glowtail', 'starhalo'], fields: [] },
+  { id: 'meteorrat', n: 'Meteor Rat', r: 'mythical', earn: 5200, evx: 'meteor', d: 'Fell from the sky still smoking. Hot to the touch, warm at heart.', fur: '#3a2e2c', belly: '#ff8a3a', eye: '#ffd23a', parts: ['flametail', 'crystals'], fields: [] },
+  { id: 'pixelrat', n: 'Pixel Rat', r: 'superrare', earn: 950, evx: 'pixel', d: 'Escaped from an old video game. Moves in 8 directions only.', fur: '#3a7aff', belly: '#ff5cf0', eye: '#ffffff', parts: ['gears'], fields: [] },
+  { id: 'frostbite', n: 'Frostbite Rat', r: 'legendary', earn: 3300, evx: 'frozen', d: 'Its whiskers are tiny icicles. Sneezes snowflakes.', fur: '#bfe9ff', belly: '#ffffff', eye: '#2a6aff', parts: ['icecrown', 'fluff'], fields: [] },
+  { id: 'twinrat', n: 'Twin Rat', r: 'rare', earn: 220, evx: 'double', d: 'There are always two. Nobody has ever found out which one is the original.', fur: '#ff9fcf', belly: '#fff0f8', parts: ['cheeks'], fields: [] },
   { id: 'invader', n: 'Invader King', r: 'apocryphal', earn: 15000, inv: 1, d: 'Leader of the invasion. Its ray gun shoots confetti.', fur: '#5a2a8a', belly: '#c08aff', parts: ['crown', 'antennae'], fields: [] }];
 const SP = {}; SPECIES.forEach((s, i) => { s.i = i; SP[s.id] = s; });
 
@@ -90,18 +96,31 @@ const MUTATIONS = {
   rain: { n: 'Rain', kind: 'wx', col: '#6fb4ff', mult: 2, pts: 5 },
   snow: { n: 'Snow', kind: 'wx', col: '#e8f6ff', mult: 2, pts: 5 },
   thunder: { n: 'Thunder', kind: 'wx', col: '#ffe14a', mult: 2.5, pts: 8 },
-  disco: { n: 'Disco', kind: 'disco', col: '#d6a8ff', mult: 2, pts: 8 } };
+  disco: { n: 'Disco', kind: 'disco', col: '#d6a8ff', mult: 2, pts: 8 },
+  // event mutations (one per rat, like weather)
+  aurora: { n: 'Aurora', kind: 'wx', col: '#5cffb4', mult: 3, pts: 12 },
+  meteor: { n: 'Meteor', kind: 'wx', col: '#ff8a3a', mult: 3.5, pts: 14 },
+  pixel: { n: 'Pixel', kind: 'wx', col: '#5c8aff', mult: 2.5, pts: 10 },
+  frozen: { n: 'Frozen', kind: 'wx', col: '#a8e4ff', mult: 2.5, pts: 10 },
+  // Reverse: every colour turned inside out. It can happen to any rat, any time (very rarely)
+  reverse: { n: 'Reverse', kind: 'rev', col: '#222222', mult: 5, pts: 40 } };
 
 // ---------- global events ----------
 const EVENTS = {
-  rain: { n: 'Rain', d: '30% chance for the Rain mutation.', col: '#6fb4ff', dur: 600, eff: { rain: 0.30 }, sky: 'rain' },
-  snow: { n: 'Snow', d: '30% chance for the Snow mutation.', col: '#e8f6ff', dur: 600, eff: { snow: 0.30 }, sky: 'snow' },
-  thunder: { n: 'Thunderstorm', d: '30% chance for the Thunder mutation.', col: '#ffe14a', dur: 600, eff: { thunder: 0.30 }, sky: 'storm' },
-  dj: { n: 'DJ Event', d: '35% chance of a disco ball on a rat’s head.', col: '#d6a8ff', dur: 600, eff: { disco: 0.35 }, sky: 'disco' },
+  rain: { n: 'Rain', d: '{rain} chance for the Rain mutation.', col: '#6fb4ff', dur: 600, eff: { rain: 0.30 }, sky: 'rain' },
+  snow: { n: 'Snow', d: '{snow} chance for the Snow mutation.', col: '#e8f6ff', dur: 600, eff: { snow: 0.30 }, sky: 'snow' },
+  thunder: { n: 'Thunderstorm', d: '{thunder} chance for the Thunder mutation.', col: '#ffe14a', dur: 600, eff: { thunder: 0.30 }, sky: 'storm' },
+  dj: { n: 'DJ Event', d: '{disco} chance of a disco ball on a rat’s head.', col: '#d6a8ff', dur: 600, eff: { disco: 0.35 }, sky: 'disco' },
   heaven: { n: "Heaven's Event", d: 'Rare, high-rarity rats appear far more often.', col: '#fff3c4', dur: 600, eff: { heaven: 1 }, sky: 'heaven' },
-  goldmoon: { n: 'Gold Moon', d: '80% chance for the Gold mutation.', col: '#ffcf3a', dur: 480, eff: { gold: 0.80 }, sky: 'goldmoon' },
-  diamond: { n: 'Diamond Event', d: '50% chance for the Diamond mutation.', col: '#9fe8ff', dur: 480, eff: { diamond: 0.50 }, sky: 'diamond' },
-  rainbow: { n: 'Rainbow Event', d: '30% chance for the Rainbow mutation.', col: '#ff7ad9', dur: 480, eff: { rainbow: 0.30 }, sky: 'rainbow' },
+  goldmoon: { n: 'Gold Moon', d: '{gold} chance for the Gold mutation.', col: '#ffcf3a', dur: 480, eff: { gold: 0.80 }, sky: 'goldmoon' },
+  diamond: { n: 'Diamond Event', d: '{diamond} chance for the Diamond mutation.', col: '#9fe8ff', dur: 480, eff: { diamond: 0.50 }, sky: 'diamond' },
+  rainbow: { n: 'Rainbow Event', d: '{rainbow} chance for the Rainbow mutation.', col: '#ff7ad9', dur: 480, eff: { rainbow: 0.30 }, sky: 'rainbow' },
+  aurora: { n: 'Aurora Event', d: 'Northern lights fill the sky. {aurora} chance for the Aurora mutation, and Aurora Rats appear.', col: '#5cffb4', dur: 600, eff: { aurora: 0.35 }, sky: 'aurora', rats: ['aurorarat'], ratChance: 0.03 },
+  meteor: { n: 'Meteor Shower', d: 'Meteors fall across the fields. {meteor} chance for the Meteor mutation, and Meteor Rats appear.', col: '#ff8a3a', dur: 600, eff: { meteor: 0.20 }, sky: 'meteor', rats: ['meteorrat'], ratChance: 0.02 },
+  pixel: { n: 'Pixel Party', d: 'The world goes 8-bit! {pixel} chance for the Pixel mutation, and Pixel Rats appear.', col: '#5c8aff', dur: 480, eff: { pixel: 0.25 }, sky: 'pixel', rats: ['pixelrat'], ratChance: 0.04 },
+  frozen: { n: 'Frozen Over', d: 'Everything freezes. {frozen} chance for the Frozen mutation, and Frostbite Rats appear.', col: '#a8e4ff', dur: 600, eff: { frozen: 0.30 }, sky: 'frozen', rats: ['frostbite'], ratChance: 0.03 },
+  alien: { n: 'Alien Invasion', d: 'UFOs fly over the fields and beam Alien Rats down into them!', col: '#7aff6a', dur: 480, eff: {}, sky: 'alien', rats: ['alien'], ratChance: 0, drop: { every: 25, n: 2 } },
+  double: { n: 'Double Trouble', d: 'Every new rat has a {double} chance to come with a twin!', col: '#ff9fcf', dur: 480, eff: { double: 0.35 }, sky: 'double', rats: ['twinrat'], ratChance: 0.03 },
   ultra: { n: 'ULTRA EVENT', d: 'Every event at once!', col: '#ff5cf0', dur: 300, eff: { rain: 0.30, snow: 0.30, thunder: 0.30, disco: 0.35, heaven: 1, gold: 0.80, diamond: 0.50, rainbow: 0.30, secret: 1 }, sky: 'ultra' } };
 
 // ---------- rods ----------
@@ -300,7 +319,7 @@ const DEFAULT_CONFIG = {
   rarityEarn: Object.fromEntries(RARITIES.map(r => [r.id, r.base])),
   speciesEarn: Object.fromEntries(SPECIES.filter(s => s.earn).map(s => [s.id, s.earn])),
   mutMult: Object.fromEntries(Object.entries(MUTATIONS).map(([k, m]) => [k, m.mult])),
-  natural: { gold: 0.01, diamond: 0.003, rainbow: 0.001 },
+  natural: { gold: 0.01, diamond: 0.003, rainbow: 0.001, reverse: 0.001 },
   levelMult: 0.1,        // each rat level adds 10% earnings
   evoMult: 2,            // each evolution stage doubles earnings
   rebirthLuck: 0.10,     // +10% luck for every rebirth
@@ -326,6 +345,9 @@ const DEFAULT_CONFIG = {
   promo: { on: true, items: ['discolights'], ends: 0 },
   autoEvents: true, eventEvery: [1200, 2400], // seconds between automatic events
   eventDur: {},          // the owner's own event lengths in seconds, e.g. { rain: 900 }
+  // every event's settings: mutation chances (eff), spawn speed, its own rats and how often they appear,
+  // the Reverse chance while it runs (0 = the normal chance), whether it can start by itself, and UFO drops
+  events: Object.fromEntries(Object.entries(EVENTS).map(([id, e]) => [id, { eff: Object.assign({}, e.eff), spawnMult: 1, rats: (e.rats || []).slice(), ratChance: e.ratChance || 0, reverse: 0, auto: id !== 'ultra', drop: e.drop ? Object.assign({}, e.drop) : { every: 0, n: 0 } }])),
   autoInvasions: true, invasionEvery: [2700, 5400], invasionDur: 240,
   rebirthLevel: 50, rebirthStep: 10, rebirthResetsMoney: true,
   maxRatsPerField: 18, spawnEvery: 2.5,
@@ -354,7 +376,7 @@ function ratEarn(cfg, rat, mods) {
   const parts = [], base = baseEarn(cfg, rat.sp);
   parts.push({ k: 'base', n: cfg.speciesEarn[rat.sp] != null ? s.n + ' value' : RI[s.r].n + ' base', v: base });
   let t = base;
-  for (const m of [rat.mut, rat.wx, rat.disco ? 'disco' : null]) if (m && cfg.mutMult[m]) { parts.push({ k: 'mut', n: MUTATIONS[m].n + ' mutation', x: +cfg.mutMult[m] }); t *= cfg.mutMult[m]; }
+  for (const m of [rat.mut, rat.wx, rat.disco ? 'disco' : null, rat.rev ? 'reverse' : null]) if (m && cfg.mutMult[m]) { parts.push({ k: 'mut', n: MUTATIONS[m].n + ' mutation', x: +cfg.mutMult[m] }); t *= cfg.mutMult[m]; }
   const lm = 1 + cfg.levelMult * ((rat.lvl || 1) - 1); if (lm !== 1) { parts.push({ k: 'lvl', n: 'Level ' + rat.lvl, x: lm }); t *= lm; }
   if (rat.evo) { const em = Math.pow(cfg.evoMult, rat.evo); parts.push({ k: 'evo', n: 'Evolution ' + ['', 'I', 'II', 'III'][rat.evo], x: em }); t *= em; }
   if (mods.rebirths) { const rm = 1 + cfg.rebirthEarn * mods.rebirths; parts.push({ k: 'reb', n: mods.rebirths + ' rebirth' + (mods.rebirths > 1 ? 's' : ''), x: rm }); t *= rm; }
@@ -382,29 +404,48 @@ function pickWeighted(w, r) { let t = 0; for (const x of w) t += Math.max(0, x);
 // species of a rarity that can appear in a field (or in eggs when fid is null)
 function speciesFor(rid, fid, opts) {
   opts = opts || {};
-  let list = SPECIES.filter(s => s.r === rid && !s.inv && !(s.secret && !opts.secret));
+  let list = SPECIES.filter(s => s.r === rid && !s.inv && !s.evx && !(s.secret && !opts.secret));
   if (fid) { const native = list.filter(s => s.fields.includes(fid)); if (native.length) list = native; }
   return list;
 }
 // ev: merged event effects; mutMul: Mutation potion multiplier for natural chances
 function rollMutations(cfg, ev, mutMul, r) {
-  ev = ev || {}; mutMul = mutMul || 1; const out = { mut: null, wx: null, disco: 0 };
+  ev = ev || {}; mutMul = mutMul || 1; const out = { mut: null, wx: null, disco: 0, rev: 0 };
   const ch = k => Math.min(0.95, Math.max(ev[k] || 0, (cfg.natural[k] || 0) * mutMul));
   if (r() < ch('rainbow')) out.mut = 'rainbow'; else if (r() < ch('diamond')) out.mut = 'diamond'; else if (r() < ch('gold')) out.mut = 'gold';
-  const wx = ['rain', 'snow', 'thunder'].filter(k => ev[k]); if (wx.length) { const k = wx[(r() * wx.length) | 0]; if (r() < ev[k]) out.wx = k; }
+  const wx = WXM.filter(k => ev[k] > 0); if (wx.length) { const k = wx[(r() * wx.length) | 0]; if (r() < ev[k]) out.wx = k; }
   if (ev.disco && r() < ev.disco) out.disco = 1;
+  if (r() < ch('reverse')) out.rev = 1;
   return out;
 }
-function mergeEvents(active) { const e = {}; for (const a of active || []) { const d = EVENTS[a.id]; if (!d) continue; for (const k in d.eff) e[k] = Math.max(e[k] || 0, d.eff[k]); } return e; }
+const WXM = Object.keys(MUTATIONS).filter(k => MUTATIONS[k].kind === 'wx');
+// the running events' combined effects, using the owner's settings for each event
+function evCfg(cfg, id) { return (cfg && cfg.events && cfg.events[id]) || {}; }
+function evEff(cfg, id) { const d = EVENTS[id]; const o = evCfg(cfg, id).eff; return Object.assign({}, d ? d.eff : {}, o || {}); }
+function mergeEvents(active, cfg) {
+  const e = { excl: [], spawnMult: 1 };
+  for (const a of active || []) {
+    const d = EVENTS[a.id]; if (!d) continue; const c = evCfg(cfg, a.id), eff = evEff(cfg, a.id);
+    for (const k in eff) e[k] = Math.max(e[k] || 0, +eff[k] || 0);
+    if (a.id === 'ultra') for (const id of Object.keys(EVENTS)) if (id !== 'ultra' && id !== 'alien') { const x = evEff(cfg, id); for (const k in x) e[k] = Math.max(e[k] || 0, +x[k] || 0); }
+    const rats = (c.rats || d.rats || []).filter(s => SP[s]), rc = c.ratChance != null ? +c.ratChance : (d.ratChance || 0);
+    if (rats.length && rc > 0) e.excl.push({ rats, chance: Math.min(1, rc) });
+    if (+c.spawnMult > 0) e.spawnMult = Math.max(e.spawnMult, +c.spawnMult);
+    if (+c.reverse > 0) e.reverse = Math.max(e.reverse || 0, +c.reverse);
+  }
+  return e;
+}
+// an event's description with the owner's numbers in it
+function evDesc(cfg, id) { const d = EVENTS[id]; if (!d) return ''; const eff = evEff(cfg, id); return d.d.replace(/\{(\w+)\}/g, (m, k) => Math.round((+eff[k] || 0) * 1000) / 10 + '%'); }
 function deepMerge(base, over) {
   if (over == null || typeof over !== 'object' || Array.isArray(over)) return over === undefined ? base : over;
   const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
   for (const k of Object.keys(over)) out[k] = (base && typeof base[k] === 'object' && base[k] && !Array.isArray(base[k])) ? deepMerge(base[k], over[k]) : over[k];
   return out;
 }
-function ratName(rat) { const s = SP[rat.sp]; if (!s) return 'Rat'; const m = []; if (rat.mut) m.push(MUTATIONS[rat.mut].n); if (rat.wx) m.push(MUTATIONS[rat.wx].n); if (rat.disco) m.push('Disco'); return (m.length ? m.join(' ') + ' ' : '') + s.n + (rat.evo ? ' ' + ['', 'I', 'II', 'III'][rat.evo] : ''); }
+function ratName(rat) { const s = SP[rat.sp]; if (!s) return 'Rat'; const m = []; if (rat.mut) m.push(MUTATIONS[rat.mut].n); if (rat.wx) m.push(MUTATIONS[rat.wx].n); if (rat.disco) m.push('Disco'); if (rat.rev) m.unshift('Reverse'); return (m.length ? m.join(' ') + ' ' : '') + s.n + (rat.evo ? ' ' + ['', 'I', 'II', 'III'][rat.evo] : ''); }
 
-const RCDATA = { RARITIES, RI, SPECIES, SP, FIELDS, FI, MUTATIONS, EVENTS, RODS, ROD, POTIONS, POT, EGGS, EGG, MYSTERY, COSMETICS, COS, COS_SLOTS, COS_CATS, ACHIEVEMENTS, ACH,
+const RCDATA = { evDesc, evCfg, evEff, WXM, RARITIES, RI, SPECIES, SP, FIELDS, FI, MUTATIONS, EVENTS, RODS, ROD, POTIONS, POT, EGGS, EGG, MYSTERY, COSMETICS, COS, COS_SLOTS, COS_CATS, ACHIEVEMENTS, ACH,
   DAILY, DAILY_COS_ROTATION, QUESTS, STATIONS, ST, PORTALS, LOBBY, showcaseStand, canEnter, lockText, aName, mulberry, FIELD_R, fieldLayout, blocked, DEFAULT_CONFIG,
   fmtN, fmtMoney, fmtDur, ratXpNeed, playerXpNeed, baseEarn, ratEarn, sellPrice, slotPrice, storagePrice, inventoryPrice, capPrice, rebirthNeed, spawnWeights, pickWeighted,
   speciesFor, rollMutations, mergeEvents, deepMerge, ratName, VERSION: 1 };
@@ -429,7 +470,7 @@ MODS['./saves.js'] = function (module, exports, require) {
 // device; they bring it when they connect, and the server sends it back every few seconds while they play.
 const D = require('../shared/data.js');
 const PL_NUM = ['money', 'level', 'xp', 'rebirths', 'caught', 'trades', 'rarity_score', 'mutation_score', 'last_seen'];
-const RAT_NUM = ['disco', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
+const RAT_NUM = ['disco', 'rev', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
 // check a save that came from a device: right shapes, sane numbers, known rats
 function clean(b) {
   if (!b || typeof b !== 'object' || !b.pl || !Array.isArray(b.rats) || b.rats.length > 6000) return null;
@@ -455,7 +496,7 @@ function writeAcc(G, id, b) {
   if (!st.plGet.get(id)) st.plInsert.run(id, p.money, p.data, p.last_seen, p.color);
   st.plSave.run(p.money, p.level, p.xp, p.rebirths, p.caught, p.trades, p.rarity_score, p.mutation_score, p.data, p.last_seen, p.color, id);
   for (const r of st.ratsOf.all(id)) st.ratDelete.run(r.id, id);
-  for (const r of b.rats) { if (st.ratGet.get(r.id)) continue; st.ratInsert.run(r.id, id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, r.cos, r.born, r.src); } // a rat someone else owns now stays theirs
+  for (const r of b.rats) { if (st.ratGet.get(r.id)) continue; st.ratInsert.run(r.id, id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, r.cos, r.born, r.src, r.rev ? 1 : 0); } // a rat someone else owns now stays theirs
 }
 module.exports = { clean, exportAcc, writeAcc };
 
@@ -475,9 +516,9 @@ function newData() {
   return { rods: ['wood'], rod: 'wood', potions: {}, eff: {}, eggs: {}, boxes: 0, snacks: 0, slots: 0, storage: 0, inv: 0, equip: 0, cos: {}, ach: {}, titles: [], title: '',
     daily: { streak: 0, last: -1 }, quests: { day: -1, list: [] }, index: {}, idxMs: [], stats: {}, showcase: { rats: [], theme: 'classic' }, tokens: 0, fieldsVisited: {}, joined: Date.now() };
 }
-function ratFromRow(r) { let cos = {}; try { cos = JSON.parse(r.cos || '{}'); } catch (e) {} return { id: r.id, sp: r.sp, mut: r.mut || null, wx: r.wx || null, disco: r.disco ? 1 : 0, lvl: r.lvl, xp: r.xp, cap: r.cap, evo: r.evo, fav: r.fav ? 1 : 0, lock: r.lock ? 1 : 0, place: r.place, slot: r.slot, cos, born: r.born, src: r.src }; }
-function ratView(r) { return { id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, xp: Math.floor(r.xp), cap: r.cap, evo: r.evo, fav: r.fav, lock: r.lock, place: r.place, slot: r.slot, cos: r.cos, born: r.born }; }
-function lookView(r) { return { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, evo: r.evo, lvl: r.lvl, cos: r.cos }; }
+function ratFromRow(r) { let cos = {}; try { cos = JSON.parse(r.cos || '{}'); } catch (e) {} return { id: r.id, sp: r.sp, mut: r.mut || null, wx: r.wx || null, disco: r.disco ? 1 : 0, rev: r.rev ? 1 : 0, lvl: r.lvl, xp: r.xp, cap: r.cap, evo: r.evo, fav: r.fav ? 1 : 0, lock: r.lock ? 1 : 0, place: r.place, slot: r.slot, cos, born: r.born, src: r.src }; }
+function ratView(r) { return { id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, xp: Math.floor(r.xp), cap: r.cap, evo: r.evo, fav: r.fav, lock: r.lock, place: r.place, slot: r.slot, cos: r.cos, born: r.born }; }
+function lookView(r) { return { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, evo: r.evo, lvl: r.lvl, cos: r.cos }; }
 
 function load(G, acc) {
   const row = G.db.st.plGet.get(acc.id); if (!row) return null;
@@ -494,7 +535,7 @@ function load(G, acc) {
 }
 function scores(P) {
   let rs = 0, ms = 0;
-  for (const r of P.rats.values()) { const s = SP[r.sp]; if (!s) continue; rs += RI[s.r].pts * (1 + (r.evo || 0)); for (const m of [r.mut, r.wx, r.disco ? 'disco' : null]) if (m) ms += MUTATIONS[m].pts; }
+  for (const r of P.rats.values()) { const s = SP[r.sp]; if (!s) continue; rs += RI[s.r].pts * (1 + (r.evo || 0)); for (const m of [r.mut, r.wx, r.disco ? 'disco' : null, r.rev ? 'reverse' : null]) if (m && MUTATIONS[m]) ms += MUTATIONS[m].pts; }
   return [rs, ms];
 }
 function save(G, P) {
@@ -502,7 +543,7 @@ function save(G, P) {
   G.db.st.plSave.run(P.money, P.level, P.xp, P.rebirths, P.caught, P.trades, rs, ms, JSON.stringify(P.d), P.online ? Date.now() : P.last_seen, P.color, P.id);
   P.dirty = false;
 }
-function saveRat(G, P, r) { G.db.st.ratSave.run(r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, JSON.stringify(r.cos || {}), r.id, P.id); }
+function saveRat(G, P, r) { G.db.st.ratSave.run(r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, r.fav, r.lock, r.place, r.slot, JSON.stringify(r.cos || {}), r.rev ? 1 : 0, r.id, P.id); }
 
 // ---------- capacity ----------
 const cap = (G, P) => ({ slots: G.cfg.startSlots + P.d.slots, storage: G.cfg.startStorage + P.d.storage * G.cfg.storageStep, inv: G.cfg.startInventory + P.d.inv * G.cfg.inventoryStep, equip: G.cfg.startEquip + P.d.equip });
@@ -544,7 +585,7 @@ function addXP(G, P, xp) {
 // ---------- Rat Index ----------
 function discover(G, P, r) {
   const e = P.d.index[r.sp] || (P.d.index[r.sp] = { n: 0, m: {} }); const isNew = !e.n; e.n++;
-  for (const m of [r.mut, r.wx, r.disco ? 'disco' : null]) if (m) e.m[m] = 1;
+  for (const m of [r.mut, r.wx, r.disco ? 'disco' : null, r.rev ? 'reverse' : null]) if (m) e.m[m] = 1;
   if (r.evo) e.m['evo' + r.evo] = 1;
   const s = SP[r.sp]; if (s) { P.d.stats['r_' + s.r] = (P.d.stats['r_' + s.r] || 0) + 1; }
   if (isNew) {
@@ -635,8 +676,8 @@ function claimQuest(G, P, i) {
 // ---------- new rats ----------
 function giveRat(G, P, spec, src, opts) {
   opts = opts || {}; const place = opts.place || roomFor(G, P); if (!place) return null;
-  const r = { id: newId(), sp: spec.sp, mut: spec.mut || null, wx: spec.wx || null, disco: spec.disco ? 1 : 0, lvl: 1, xp: 0, cap: G.cfg.ratMaxLevel, evo: spec.evo || 0, fav: 0, lock: 0, place, slot: -1, cos: {}, born: Date.now(), src: src || '' };
-  G.db.st.ratInsert.run(r.id, P.id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, 0, 0, r.place, -1, '{}', r.born, r.src);
+  const r = { id: newId(), sp: spec.sp, mut: spec.mut || null, wx: spec.wx || null, disco: spec.disco ? 1 : 0, rev: spec.rev ? 1 : 0, lvl: 1, xp: 0, cap: G.cfg.ratMaxLevel, evo: spec.evo || 0, fav: 0, lock: 0, place, slot: -1, cos: {}, born: Date.now(), src: src || '' };
+  G.db.st.ratInsert.run(r.id, P.id, r.sp, r.mut, r.wx, r.disco, r.lvl, r.xp, r.cap, r.evo, 0, 0, r.place, -1, '{}', r.born, r.src, r.rev);
   P.rats.set(r.id, r);
   discover(G, P, r);
   P.dirty = true; return r;
@@ -674,6 +715,7 @@ function create(G) {
     if (!E.nextInv) E.nextInv = t + 1000 * (c.invasionEvery[0] + rnd() * (c.invasionEvery[1] - c.invasionEvery[0]));
   }
   const durOf = id => (G.cfg.eventDur && G.cfg.eventDur[id]) || D.EVENTS[id].dur;
+  const ecfg = id => D.evCfg(G.cfg, id);
   function weather() {
     if (E.weather) return E.weather;
     const ids = live().map(e => e.id);
@@ -695,7 +737,8 @@ function create(G) {
     const ex = E.active.find(e => e.id === id && e.ends > t);
     if (ex) ex.ends = Math.max(ex.ends, ends); else E.active.push({ id, ends, by: by || '' });
     E.active = E.active.filter(e => e.ends > t);
-    announce({ kind: 'event', text: d.n + ' has started! ' + d.d, col: d.col, dur: 8, by });
+    announce({ kind: 'event', text: d.n + ' has started! ' + D.evDesc(G.cfg, id), col: d.col, dur: 8, sound: id === 'alien' ? 'siren' : null, by });
+    if (id === 'alien' || id === 'ultra') E.nextDrop = t + 4000;
     push(); return true;
   }
   function stop(id, by) { const before = E.active.length; E.active = E.active.filter(e => e.id !== id); if (E.active.length !== before) { announce({ kind: 'event', text: D.EVENTS[id].n + ' has ended.', col: D.EVENTS[id].col, dur: 5, by }); push(); } return true; }
@@ -713,17 +756,32 @@ function create(G) {
     if (E.inv && E.inv.ends <= t) { E.inv = null; ch = true; announce({ kind: 'event', text: 'The rat invasion is over.', col: '#ff3a5c', dur: 6 }); }
     if (!E.nextEvent) schedule(t);
     if (G.cfg.autoEvents && t >= E.nextEvent) {
-      const ids = Object.keys(D.EVENTS).filter(k => k !== 'ultra'), pick = rnd() < 0.06 ? 'ultra' : ids[(rnd() * ids.length) | 0];
-      if (G.sessions.size) start(pick, 0, 'auto'); E.nextEvent = 0; schedule(t);
+      const ids = Object.keys(D.EVENTS).filter(k => k !== 'ultra' && ecfg(k).auto !== false), pick = rnd() < 0.06 && ecfg('ultra').auto !== false ? 'ultra' : ids[(rnd() * ids.length) | 0];
+      if (G.sessions.size && pick) start(pick, 0, 'auto'); E.nextEvent = 0; schedule(t);
     }
     if (G.cfg.autoInvasions && E.nextInv && t >= E.nextInv) { if (G.sessions.size && !E.inv) startInvasion(0, 'auto'); E.nextInv = t + 1000 * (G.cfg.invasionEvery[0] + rnd() * (G.cfg.invasionEvery[1] - G.cfg.invasionEvery[0])); }
+    // Alien Invasion: UFOs beam the event's rats down into fields where people are playing
+    const alien = live().find(e => e.id === 'alien');
+    if (alien && G.spawnRat) {
+      const c = ecfg('alien'), dr = c.drop || D.EVENTS.alien.drop, every = Math.max(5, +dr.every || 25) * 1000;
+      if (!E.nextDrop) E.nextDrop = t + 4000;
+      if (t >= E.nextDrop) {
+        E.nextDrop = t + every;
+        const rats = (c.rats && c.rats.length ? c.rats : D.EVENTS.alien.rats).filter(s => D.SP[s]);
+        if (rats.length) for (const room of G.rooms.values()) {
+          const areas = Object.values(room.areas).filter(a => a.field && a.players.size); if (!areas.length) continue;
+          for (let i = 0; i < Math.max(1, Math.min(10, +dr.n || 2)); i++) { const a = areas[(rnd() * areas.length) | 0]; G.spawnRat(a, { sp: rats[(rnd() * rats.length) | 0], ufo: 1 }); }
+        }
+      }
+    } else E.nextDrop = 0;
     if (ch) push();
   }
   function rareSpawn(a, r) { // let players in that field know something special turned up
     const s = D.SP[r.sp], rr = D.RI[s.r];
-    for (const p of a.players) G.send(p, { t: 'toast', kind: 'rare', text: D.aName(rr.n + ' rat').replace(/^./, c => c.toUpperCase()) + ' appeared nearby!', sub: 'Look for the ' + rr.n.toLowerCase() + ' glow.', col: rr.col });
+    const text = r.ev === 3 ? 'A UFO beamed down ' + D.aName(s.n) + '!' : s.evx ? D.aName(s.n).replace(/^./, c => c.toUpperCase()) + ' appeared nearby!' : D.aName(rr.n + ' rat').replace(/^./, c => c.toUpperCase()) + ' appeared nearby!';
+    for (const p of a.players) G.send(p, { t: 'toast', kind: 'rare', text, sub: r.ev === 3 ? 'Look for the green beam of light.' : 'Look for the ' + rr.n.toLowerCase() + ' glow.', col: rr.col });
   }
-  G.events = { effects: () => D.mergeEvents(live()), active: live, invasion: () => !!(E.inv && E.inv.ends > now()), state, recent: () => E.ann.filter(a => now() - a.at < 60000).slice(-3),
+  G.events = { effects: () => D.mergeEvents(live(), G.cfg), active: live, invasion: () => !!(E.inv && E.inv.ends > now()), state, recent: () => E.ann.filter(a => now() - a.at < 60000).slice(-3),
     start, stop, startInvasion, stopInvasion, setWeather, announce, tick, rareSpawn, push, all: () => E.ann.slice() };
 }
 module.exports = { create };
@@ -813,7 +871,7 @@ function create(G) {
         };
         for (const r of ra) move(A, B, r); for (const r of rb) move(B, A, r);
         A.trades++; B.trades++; PL.bump(G, A, 'trades'); PL.bump(G, B, 'trades');
-        G.db.st.tradeInsert.run(A.id, B.id, JSON.stringify(ra.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, evo: r.evo }))), JSON.stringify(rb.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, lvl: r.lvl, evo: r.evo }))), now());
+        G.db.st.tradeInsert.run(A.id, B.id, JSON.stringify(ra.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, evo: r.evo }))), JSON.stringify(rb.map(r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, lvl: r.lvl, evo: r.evo }))), now());
         PL.checkAch(G, A); PL.checkAch(G, B); PL.save(G, A); PL.save(G, B);
         return { ra, rb };
       });
@@ -920,7 +978,7 @@ function create(G) {
   }
 
   // ---------- rats in the fields ----------
-  const ratNet = r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, st: r.st, ax: +r.ax.toFixed(2), az: +r.az.toFixed(2), bx: +r.bx.toFixed(2), bz: +r.bz.toFixed(2), t0: r.t0, t1: r.t1, by: r.by || 0, ev: r.ev || 0 });
+  const ratNet = r => ({ id: r.id, sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev || 0, st: r.st, ax: +r.ax.toFixed(2), az: +r.az.toFixed(2), bx: +r.bx.toFixed(2), bz: +r.bz.toFixed(2), t0: r.t0, t1: r.t1, by: r.by || 0, ev: r.ev || 0 });
   const ratPos = (r, t) => { if (t >= r.t1 || r.t1 <= r.t0) return [r.bx, r.bz]; const k = (t - r.t0) / (r.t1 - r.t0); return [r.ax + (r.bx - r.ax) * k, r.az + (r.bz - r.az) * k]; };
   function luckRoller(a) { const ps = [...a.players]; return ps.length ? ps[(rnd() * ps.length) | 0] : null; }
   function spawnRat(a, forced) {
@@ -930,16 +988,24 @@ function create(G) {
     const roller = luckRoller(a), luck = roller ? PL.luckOf(G, roller.P) : 1;
     let sp = forced && forced.sp, rid;
     if (!sp) {
-      if (inv && rnd() < 0.5) { const list = D.SPECIES.filter(s => s.inv); sp = list[(rnd() * list.length) | 0].id; }
+      const ex = (ev.excl || []).find(x => rnd() < x.chance); // a running event's own rats
+      if (ex) sp = ex.rats[(rnd() * ex.rats.length) | 0];
+      else if (inv && rnd() < 0.5) { const list = D.SPECIES.filter(s => s.inv); sp = list[(rnd() * list.length) | 0].id; }
       else if (ev.secret && (a.id === 'omega' || a.id === 'secret') && rnd() < 0.004) { const list = D.SPECIES.filter(s => s.secret); sp = list[(rnd() * list.length) | 0].id; }
       else { const w = D.spawnWeights(G.cfg, a.id, luck, ev); rid = RARITIES[D.pickWeighted(w, rnd)].id; const list = D.speciesFor(rid, a.id); if (!list.length) return null; sp = list[(rnd() * list.length) | 0].id; }
     }
     const mp = roller && PL.eff(roller.P, 'mutation') ? PL.eff(roller.P, 'mutation').mult : 1;
     const m = forced && forced.muts ? forced.muts : D.rollMutations(G.cfg, ev, mp, rnd);
     const rr = RI[SP[sp].r], t = now();
-    const r = { id: (++ratSeq).toString(36), sp, mut: m.mut || null, wx: m.wx || null, disco: m.disco ? 1 : 0, ax: x, az: z, bx: x, bz: z, t0: t, t1: t, idle: t + 500 + rnd() * 2000, st: 'w', dies: t + rr.life * 1000 * (forced ? 2 : 1) * (inv ? 1.3 : 1), ev: forced ? 1 : (SP[sp].inv ? 2 : 0) };
+    if (forced && forced.near) { const q = forced.near; x = q.ax + (rnd() - 0.5) * 3; z = q.az + (rnd() - 0.5) * 3; if (D.blocked(L, x, z, 1.2)) { x = q.ax; z = q.az; } }
+    const long = forced && !forced.twin && !forced.ufo; // owner spawns stay longer
+    // ev: 1 owner spawn, 2 invader, 3 dropped by a UFO, 4 a twin, 5 an event's own rat
+    const r = { id: (++ratSeq).toString(36), sp, mut: m.mut || null, wx: m.wx || null, disco: m.disco ? 1 : 0, rev: m.rev ? 1 : 0, ax: x, az: z, bx: x, bz: z, t0: t, t1: t, idle: t + (forced && forced.ufo ? 3200 : 500) + rnd() * 2000, st: 'w', dies: t + rr.life * 1000 * (long ? 2 : 1) * (inv || (forced && forced.ufo) ? 1.3 : 1),
+      ev: forced && forced.ufo ? 3 : forced && forced.twin ? 4 : forced ? 1 : SP[sp].inv ? 2 : SP[sp].evx ? 5 : 0 };
+    const dbl = !forced && ev.double > 0 && rnd() < ev.double; if (dbl && !r.ev) r.ev = 4; // Double Trouble: it comes with a twin
     a.rats.set(r.id, r); a.out.rs.push(ratNet(r));
-    if (rr.i >= 7 && !forced) G.events.rareSpawn && G.events.rareSpawn(a, r);
+    if ((rr.i >= 7 || SP[sp].evx) && (!forced || forced.ufo)) G.events.rareSpawn && G.events.rareSpawn(a, r);
+    if (dbl) spawnRat(a, { sp, twin: 1, near: r });
     return r;
   }
   G.spawnRat = spawnRat;
@@ -993,11 +1059,11 @@ function create(G) {
     const r = a.rats.get(c.id); s.catching = null; if (!r || r.st !== 'h' || r.by !== P.id) return send(s, { t: 'miss', why: 'It got away.' });
     if (rnd() < catchOdds(P, r)) {
       const rat = G.db.tx(() => {
-        const got = PL.giveRat(G, P, { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco }, 'catch');
+        const got = PL.giveRat(G, P, { sp: r.sp, mut: r.mut, wx: r.wx, disco: r.disco, rev: r.rev }, 'catch');
         if (!got) return null;
         P.caught++; const rr = RI[SP[r.sp].r]; PL.bump(G, P, 'caught');
         if (rr.i >= 2) PL.bump(G, P, 'caughtRare');
-        if (r.mut || r.wx || r.disco) PL.bump(G, P, 'mutCaught');
+        if (r.mut || r.wx || r.disco || r.rev) PL.bump(G, P, 'mutCaught');
         PL.addXP(G, P, rr.xp * (r.mut ? 2 : 1));
         PL.checkAch(G, P); PL.save(G, P); return got;
       });
@@ -1061,7 +1127,7 @@ function create(G) {
       for (const aid in room.areas) {
         const a = room.areas[aid]; if (!a.players.size) continue;
         if (a.field) {
-          const inv = G.events.invasion(), max = Math.round(G.cfg.maxRatsPerField * (inv ? 2.5 : 1)), every = G.cfg.spawnEvery * 1000 / (inv ? 3 : 1);
+          const inv = G.events.invasion(), sm = Math.max(0.1, G.events.effects().spawnMult || 1), max = Math.round(G.cfg.maxRatsPerField * (inv ? 2.5 : 1) * Math.min(2, sm)), every = G.cfg.spawnEvery * 1000 / (inv ? 3 : 1) / sm;
           if (a.rats.size < max && t - a.spawnT > every) { a.spawnT = t; spawnRat(a); }
           for (const r of a.rats.values()) {
             if (r.st === 'h') { const s = [...a.players].find(x => x.P.id === r.by); if (!s || !s.catching || t > s.catching.start + s.catching.dur * 1000 + 15000) { if (s) { s.catching = null; send(s, { t: 'miss', why: 'It wriggled free.' }); } r.st = 'w'; r.by = 0; r.idle = t; } continue; }
@@ -1419,7 +1485,7 @@ function create(G) {
     if (eaten.some(r => r.fav) && !m.confirm) return send(s, { t: 'confirm', what: 'evolve', ids: list.map(r => r.id), text: 'Two of these rats will be combined into one. One of them is a favorite. Continue?' });
     const rank = { rainbow: 3, diamond: 2, gold: 1 };
     G.db.tx(() => {
-      for (const r of eaten) { if (!a.mut || (rank[r.mut] || 0) > (rank[a.mut] || 0)) a.mut = r.mut || a.mut; if (!a.wx && r.wx) a.wx = r.wx; if (r.disco) a.disco = 1; a.lvl = Math.max(a.lvl, r.lvl); a.cap = Math.max(a.cap, r.cap); PL.removeRat(G, P, r); }
+      for (const r of eaten) { if (!a.mut || (rank[r.mut] || 0) > (rank[a.mut] || 0)) a.mut = r.mut || a.mut; if (!a.wx && r.wx) a.wx = r.wx; if (r.disco) a.disco = 1; if (r.rev) a.rev = 1; a.lvl = Math.max(a.lvl, r.lvl); a.cap = Math.max(a.cap, r.cap); PL.removeRat(G, P, r); }
       a.evo++; PL.saveRat(G, P, a); PL.discover(G, P, a); PL.bump(G, P, 'evolved'); PL.checkAch(G, P); PL.save(G, P);
     });
     send(s, { t: 'evolved', rat: PL.ratView(a), gone: eaten.map(r => r.id) }); G.sendRats(P, [a], eaten.map(r => r.id)); if (a.place === 'eq') petsChanged(s);
@@ -1499,8 +1565,8 @@ function MemDB(saved) {
     plSave: { run: (money, level, xp, rebirths, caught, trades, rs, ms, data, last, color, id) => { const p = byId('players', id); if (p) Object.assign(p, { money, level, xp, rebirths, caught, trades, rarity_score: rs, mutation_score: ms, data, last_seen: last, color }); return { changes: p ? 1 : 0 }; } },
     ratsOf: { all: owner => T.rats.filter(r => r.owner === owner).map(r => Object.assign({}, r)) },
     ratGet: { get: id => { const r = T.rats.find(x => x.id === id); return r && Object.assign({}, r); } },
-    ratInsert: { run: (id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src) => { T.rats.push({ id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src }); return { changes: 1 }; } },
-    ratSave: { run: (mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, id, owner) => { const r = T.rats.find(x => x.id === id && x.owner === owner); if (r) Object.assign(r, { mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos }); return { changes: r ? 1 : 0 }; } },
+    ratInsert: { run: (id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src, rev) => { T.rats.push({ id, owner, sp, mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, born, src, rev: rev ? 1 : 0 }); return { changes: 1 }; } },
+    ratSave: { run: (mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, rev, id, owner) => { const r = T.rats.find(x => x.id === id && x.owner === owner); if (r) Object.assign(r, { mut, wx, disco, lvl, xp, cap, evo, fav, lock, place, slot, cos, rev: rev ? 1 : 0 }); return { changes: r ? 1 : 0 }; } },
     ratOwner: { run: (to, place, id, from) => { const r = T.rats.find(x => x.id === id && x.owner === from && !x.lock); if (r) Object.assign(r, { owner: to, place, slot: -1, fav: 0 }); return { changes: r ? 1 : 0 }; } },
     ratDelete: { run: (id, owner) => { const i = T.rats.findIndex(x => x.id === id && x.owner === owner); if (i >= 0) T.rats.splice(i, 1); return { changes: i >= 0 ? 1 : 0 }; } },
     tradeInsert: { run: (a, b, ar, br, at) => { T.trades.push({ id: ++T.seq.trades, a, b, a_rats: ar, b_rats: br, at }); if (T.trades.length > 200) T.trades.shift(); return { changes: 1 }; } },
@@ -1741,7 +1807,7 @@ function PeerHub(cfg) {
 
 // ---------- saves: what travels between a guest's device and the host ----------
 const PL_NUM = ['money', 'level', 'xp', 'rebirths', 'caught', 'trades', 'rarity_score', 'mutation_score', 'last_seen'];
-const RAT_NUM = ['disco', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
+const RAT_NUM = ['disco', 'rev', 'lvl', 'xp', 'cap', 'evo', 'fav', 'lock', 'slot', 'born'];
 function exportAcc(id) {
   const T = G.db.dump(), a = T.accounts.find(x => x.id === id), p = T.players.find(x => x.id === id);
   if (!a || !p) return null;
@@ -2308,7 +2374,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     'void main(){vec4 w=uM*vec4(aP,1.0);vW=w.xyz;vN=(uM*vec4(aN,0.0)).xyz;vC=aC;vU=aU;vX=aX;vL=aP;vec3 nn=vN/max(length(vN),0.0001);vS=(uSVP*vec4(w.xyz+nn*uSMO,1.0)).xyz;gl_Position=uVP*w;}';
   const FS_W = HI + 'varying vec3 vW;varying vec3 vN;varying vec3 vC;varying vec2 vU;varying vec2 vX;varying vec3 vL;varying vec3 vS;' +
     'uniform vec3 uCam;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uT;uniform float uGlow;' +
-    'uniform vec3 uTint;uniform float uEm;uniform float uA;uniform vec3 uFlash;uniform sampler2D uTex;uniform vec4 uLP[4];uniform vec4 uLC[4];uniform float uMut;uniform vec3 uRim;' + NOISE + G_SHADOW + G_HM + G_FOG + G_TONE +
+    'uniform vec3 uTint;uniform float uEm;uniform float uA;uniform vec3 uFlash;uniform sampler2D uTex;uniform vec4 uLP[4];uniform vec4 uLC[4];uniform float uMut;uniform vec2 uMX;uniform vec3 uRim;' + NOISE + G_SHADOW + G_HM + G_FOG + G_TONE +
     'void main(){vec3 n=normalize(vN);vec3 V=normalize(uCam-vW);float m=vX.x;if(dot(n,V)<0.0&&abs(m-12.0)>0.5)n=-n;' +
     'vec3 b=vC*uTint;float em=vX.y+uEm;float sp=0.0;float sh=40.0;float al=uA;float rk=0.18;float wrap=0.0;float tr=0.0;' +
     'if(m>0.5){' +
@@ -2345,6 +2411,13 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     ' if(uMut<1.5){b=mix(vec3(1.0,0.72,0.12),vec3(1.0,0.93,0.55),l)*1.05;sp=1.8;sh=50.0;rk=0.7;em+=0.1;}' +
     ' else if(uMut<2.5){b=mix(vec3(0.55,0.85,1.0),vec3(0.95,1.0,1.0),l);sp=2.0;sh=110.0;rk=0.9;float fs=step(0.94,h21(floor(vL.xy*14.0)+floor(uT*3.0)));em+=0.15+fs*1.2;}' +
     ' else{b=hue(fract(vW.y*0.35+vW.x*0.12+uT*0.35))*(0.55+0.6*l)+0.15;sp=0.8;sh=40.0;em+=0.25;rk=0.5;}}' +
+    // event mutations: aurora, meteor, pixel, frozen; and Reverse (every colour inverted)
+    'if(uMX.x>0.5){float l=dot(b,vec3(0.3,0.5,0.2));' +
+    ' if(uMX.x<1.5){float w=sin(vW.y*5.0+uT*2.2+vW.x*1.3+vW.z*0.7)*0.5+0.5;vec3 ac=mix(vec3(0.15,1.0,0.6),vec3(0.65,0.3,1.0),w);b=mix(b,ac*(0.55+0.6*l),0.62);em+=0.3+0.3*w;rk=max(rk,0.5);}' +
+    ' else if(uMX.x<2.5){float n1=vn(vL.xy*7.0+vL.z*3.0);float cr=1.0-smoothstep(0.0,0.07,abs(n1-0.5));b=b*0.35+vec3(0.12,0.09,0.08);b+=vec3(1.0,0.45,0.1)*cr*(0.8+0.4*sin(uT*5.0+vW.x));em+=cr*(1.1+0.5*sin(uT*4.0));sp=0.2;}' +
+    ' else if(uMX.x<3.5){vec2 cl=floor(vL.xy*9.0+vL.z*4.0);float h=h21(cl);b=floor(b*4.0+0.5)/4.0;b=mix(b,hue(fract(h+uT*0.15)),0.35*step(0.7,h));b*=0.8+0.35*h;em+=0.12+0.25*step(0.85,h);}' +
+    ' else{b=mix(b,vec3(0.72,0.9,1.0),0.6)+vec3(0.05,0.08,0.12);sp=2.2;sh=90.0;rk=0.9;tr=0.3;float fs=step(0.95,h21(floor(vL.xy*16.0)+floor(uT*2.0)));em+=0.08+fs*1.0;}}' +
+    'if(uMX.y>0.5){b=clamp(vec3(1.0)-b,0.0,1.0);rk=max(rk,0.35);}' +
     // light: sky and ground bounce, the sun (with shadows), nearby lamps and a rim of sky light
     'float hm=n.y*0.5+0.5;vec3 amb=mix(uGnd,uSky,hm);float nd=dot(n,uSun);float nl=max((nd+wrap)/(1.0+wrap),0.0);' +
     'float sdw=shadowAt(vS,0.0004+0.0009*(1.0-clamp(nd,0.0,1.0)));sdw=mix(1.0,sdw,smoothstep(-0.25,0.08,nd));' +
@@ -2383,7 +2456,8 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     'else if(vM<3.5){a=(1.0-smoothstep(0.86,1.0,d))*smoothstep(0.62,0.8,d);}' +
     'else if(vM<4.5){a=(1.0-smoothstep(0.25,1.0,d));a*=a;}' +
     'else if(vM<5.5){float g=clamp(1.0-d,0.0,1.0);a=pow(g,5.0)+g*0.25;c=mix(c,vec3(1.0),pow(g,8.0));}' +
-    'else{vec2 p=abs(vU);float s=max(1.0-smoothstep(0.0,0.18,p.x)*1.0,0.0)*(1.0-p.y)+max(1.0-smoothstep(0.0,0.18,p.y),0.0)*(1.0-p.x);a=clamp(s,0.0,1.0)+pow(max(1.0-d,0.0),6.0);c=mix(c,vec3(1.0),pow(max(1.0-d,0.0),4.0));}' +
+    'else if(vM<6.5){vec2 p=abs(vU);float s=max(1.0-smoothstep(0.0,0.18,p.x)*1.0,0.0)*(1.0-p.y)+max(1.0-smoothstep(0.0,0.18,p.y),0.0)*(1.0-p.x);a=clamp(s,0.0,1.0)+pow(max(1.0-d,0.0),6.0);c=mix(c,vec3(1.0),pow(max(1.0-d,0.0),4.0));}' +
+    'else{vec2 p=abs(vU);a=1.0-step(0.82,max(p.x,p.y));c=mix(c,c*0.6,step(0.62,max(p.x,p.y)));}' +
     'a*=vC.a;gl_FragColor=vec4(c*a,a);}';
   // ---------- the sun's view for shadows: depth packed into colour ----------
   const VS_D = 'attribute vec3 aP;uniform mat4 uM;uniform mat4 uSVP;void main(){gl_Position=uSVP*(uM*vec4(aP,1.0));}';
@@ -2421,13 +2495,16 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     'void main(){gl_FragColor=vec4((tp(vec2(-1.0,-1.0))+tp(vec2(1.0,-1.0))+tp(vec2(-1.0,1.0))+tp(vec2(1.0,1.0)))*0.25,1.0);}';
   const FS_BLUR = HI + 'varying vec2 vU;uniform sampler2D uS;uniform vec2 uDir;' +
     'void main(){vec3 c=texture2D(uS,vU).rgb*0.227027;c+=(texture2D(uS,vU+uDir*1.384615).rgb+texture2D(uS,vU-uDir*1.384615).rgb)*0.316216;c+=(texture2D(uS,vU+uDir*3.230769).rgb+texture2D(uS,vU-uDir*3.230769).rgb)*0.07027;gl_FragColor=vec4(c,1.0);}';
-  const FS_COMP = HI + 'varying vec2 vU;uniform sampler2D uS;uniform sampler2D uB1;uniform sampler2D uB2;uniform vec2 uPx;uniform vec4 uPP;' +
+  const FS_COMP = HI + 'varying vec2 vU;uniform sampler2D uS;uniform sampler2D uB1;uniform sampler2D uB2;uniform vec2 uPx;uniform vec4 uPP;uniform vec4 uFX;' +
     'vec3 fxaa(vec2 uv){vec3 nw=texture2D(uS,uv+vec2(-1.0,-1.0)*uPx).rgb;vec3 ne=texture2D(uS,uv+vec2(1.0,-1.0)*uPx).rgb;vec3 sw=texture2D(uS,uv+vec2(-1.0,1.0)*uPx).rgb;vec3 se=texture2D(uS,uv+vec2(1.0,1.0)*uPx).rgb;vec3 mm=texture2D(uS,uv).rgb;' +
     'vec3 lu=vec3(0.299,0.587,0.114);float lnw=dot(nw,lu),lne=dot(ne,lu),lsw=dot(sw,lu),lse=dot(se,lu),lm=dot(mm,lu);float mn=min(lm,min(min(lnw,lne),min(lsw,lse)));float mx=max(lm,max(max(lnw,lne),max(lsw,lse)));' +
     'vec2 dir=vec2(-((lnw+lne)-(lsw+lse)),(lnw+lsw)-(lne+lse));float rd=max((lnw+lne+lsw+lse)*0.03125,0.0078125);float rc=1.0/(min(abs(dir.x),abs(dir.y))+rd);dir=clamp(dir*rc,vec2(-8.0),vec2(8.0))*uPx;' +
     'vec3 a=0.5*(texture2D(uS,uv+dir*(1.0/3.0-0.5)).rgb+texture2D(uS,uv+dir*(2.0/3.0-0.5)).rgb);vec3 b=a*0.5+0.25*(texture2D(uS,uv-dir*0.5).rgb+texture2D(uS,uv+dir*0.5).rgb);float lb=dot(b,lu);return (lb<mn||lb>mx)?a:b;}' +
-    'void main(){vec3 c=uPP.x>0.5?fxaa(vU):texture2D(uS,vU).rgb;vec3 bl=texture2D(uB1,vU).rgb*0.8+texture2D(uB2,vU).rgb*1.0;' +
+    'void main(){vec2 uv=vU;if(uFX.x>0.02){vec2 ps=uPx*(1.0+3.0*uFX.x);uv=(floor(vU/ps)+0.5)*ps;}vec3 c=(uPP.x>0.5&&uFX.x<0.02)?fxaa(uv):texture2D(uS,uv).rgb;vec3 bl=texture2D(uB1,uv).rgb*0.8+texture2D(uB2,uv).rgb*1.0;' +
     'c=1.0-(1.0-c)*(1.0-clamp(bl*uPP.y,0.0,1.0));float l=dot(c,vec3(0.2126,0.7152,0.0722));c=clamp(mix(vec3(l),c,uPP.z),0.0,1.0);c=mix(c,c*c*(3.0-2.0*c),0.2);' +
+    'if(uFX.x>0.02){c=mix(c,floor(c*6.0+0.5)/6.0,uFX.x*0.8);}' +
+    'if(uFX.y>0.02){vec2 e2=abs(vU-0.5)*2.0;float ed=max(e2.x,e2.y);float n=fract(sin(dot(floor(vU*vec2(110.0,70.0)),vec2(12.9898,78.233)))*43758.5453);float fr=smoothstep(0.66,1.0,ed+n*0.14)*uFX.y;c=mix(c,vec3(0.86,0.95,1.0),fr*0.85);c=mix(c,c*vec3(0.92,0.98,1.08),uFX.y*0.35);}' +
+    'if(uFX.w>0.02){c*=1.0-uFX.w*0.1*step(0.5,fract(vU.y/uPx.y*0.25));c=mix(c,c*vec3(0.88,1.12,0.9),uFX.w*0.45);}' +
     'vec2 v=vU-0.5;c*=1.0-uPP.w*dot(v,v)*1.6;gl_FragColor=vec4(c,1.0);}';
 
   function shader(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) || 'shader error'); return s; }
@@ -2439,7 +2516,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   const LIT_U = ['uCam', 'uSun', 'uSunC', 'uSky', 'uGnd', 'uFog', 'uFogD', 'uExpo', 'uGlow', 'uSM', 'uSMI', 'uSVP', 'uSMO', 'uVP'];
   let PW, PS, PQ, PD = null, PO = null, PG = null, PPD = null, PPB = null, PPC = null;
   try {
-    PW = program(VS_W, FS_W, ['aP', 'aN', 'aC', 'aU', 'aX'], LIT_U.concat(['uM', 'uT', 'uTint', 'uEm', 'uA', 'uFlash', 'uTex', 'uLP', 'uLC', 'uMut', 'uRim', 'uHM', 'uHMI']));
+    PW = program(VS_W, FS_W, ['aP', 'aN', 'aC', 'aU', 'aX'], LIT_U.concat(['uM', 'uT', 'uTint', 'uEm', 'uA', 'uFlash', 'uTex', 'uLP', 'uLC', 'uMut', 'uMX', 'uRim', 'uHM', 'uHMI']));
     PS = program(VS_SKY, FS_SKY, ['aQ'], ['uIVP', 'uTop', 'uHor', 'uBot', 'uSunD', 'uSunC', 'uSunS', 'uT', 'uStars', 'uClouds', 'uCloudC', 'uNeb', 'uAur', 'uNebA', 'uNebB', 'uMoon', 'uMoonC', 'uRainbow', 'uExpo', 'uGlow']);
     PQ = program(VS_Q, FS_Q, ['aP', 'aU', 'aC', 'aM'], ['uVP']);
   } catch (e) {
@@ -2451,7 +2528,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   try { PD = program(VS_D, FS_D, ['aP'], ['uM', 'uSVP']); } catch (e) { PD = null; if (win.console) console.warn('RAT CATCHERS: no shadows here', e); }
   try { PO = program(VS_O, FS_O, ['aP', 'aN'], ['uM', 'uVP', 'uCam', 'uOW', 'uSun', 'uSunC', 'uFog', 'uFogD', 'uOC', 'uExpo']); } catch (e) { PO = null; }
   try { if (gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) > 0) PG = program(VS_G, FS_G, ['aG', 'aH'], LIT_U.concat(['uTile', 'uPush', 'uT', 'uGP', 'uG1', 'uG2', 'uHM', 'uHMI'])); } catch (e) { PG = null; if (win.console) console.warn('RAT CATCHERS: no grass here', e); }
-  try { PPD = program(VS_P, FS_DOWN, ['aQ'], ['uS', 'uPx', 'uMask']); PPB = program(VS_P, FS_BLUR, ['aQ'], ['uS', 'uDir']); PPC = program(VS_P, FS_COMP, ['aQ'], ['uS', 'uB1', 'uB2', 'uPx', 'uPP']); } catch (e) { PPD = PPB = PPC = null; if (win.console) console.warn('RAT CATCHERS: no glow pass here', e); }
+  try { PPD = program(VS_P, FS_DOWN, ['aQ'], ['uS', 'uPx', 'uMask']); PPB = program(VS_P, FS_BLUR, ['aQ'], ['uS', 'uDir']); PPC = program(VS_P, FS_COMP, ['aQ'], ['uS', 'uB1', 'uB2', 'uPx', 'uPP', 'uFX']); } catch (e) { PPD = PPB = PPC = null; if (win.console) console.warn('RAT CATCHERS: no glow pass here', e); }
   // texture units: 0 pictures, 1 the shadow map, 2 the ground's height; samplers are wired once
   gl.useProgram(PW.p); gl.uniform1i(PW.u.uTex, 0); gl.uniform1i(PW.u.uSM, 1); gl.uniform1i(PW.u.uHM, 2);
   if (PG) { gl.useProgram(PG.p); gl.uniform1i(PG.u.uSM, 1); gl.uniform1i(PG.u.uHM, 2); }
@@ -3415,6 +3492,9 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
       if (kind === 'chime' || !kind) { [84, 88, 91].forEach((n, i) => tone(midi(n), 0.3, { type: 'sine', v: 0.05, delay: i * 0.1, send: 0.5 })); return; }
       if (kind === 'rare') { [79, 86, 91, 98].forEach((n, i) => tone(midi(n), 0.4, { type: 'triangle', v: 0.05, delay: i * 0.08, send: 0.6 })); return; }
       if (kind === 'gift') { [76, 80, 83, 88, 92].forEach((n, i) => tone(midi(n), 0.2, { type: 'sine', v: 0.05, delay: i * 0.07, send: 0.5 })); } },
+    meteor(big, near) { noise(big ? 1.6 : 1.0, { f0: 700, f1: 40, v: 0.32 * (near == null ? 1 : near), att: 0.01 }); tone(big ? 45 : 70, 0.9, { slide: 28, v: 0.22 * (near == null ? 1 : near) }); },
+    ufo(v) { v = v == null ? 1 : v; tone(320, 1.4, { type: 'sine', slide: 520, v: 0.05 * v }); tone(330, 1.4, { type: 'triangle', slide: 180, v: 0.04 * v, delay: 0.4 }); },
+    twin() { tone(midi(84), 0.12, { type: 'triangle', v: 0.07 }); tone(midi(88), 0.14, { type: 'triangle', v: 0.07, delay: 0.09 }); },
     thunder() { noise(2.2, { f0: 900, f1: 40, v: 0.35, att: 0.02 }); tone(50, 1.6, { slide: 30, v: 0.2 }); }
   };
 
@@ -3781,7 +3861,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   function enterArea(m) {
     S.aid = m.a; S.A = getArea(m.a, LV(), S.me ? S.me.rebirths : 0); S.others.clear(); ENV.snap = true; S.frats.clear(); S.chests.clear(); S.catching = null; S.aimed = null; S.fly = []; S.castFx = null;
     for (const p of m.players) addOther(p);
-    for (const r of m.rats) S.frats.set(r.id, fratObj(r));
+    for (const r of m.rats) { const o = fratObj(r); o.born -= 10; o.popped = o.beamed = 1; S.frats.set(r.id, o); } // already here: no arrival effects
     for (const c of m.chests) S.chests.set(c.id, chestObj(c));
     const y = S.you; y.p = [m.you[0], S.A.height(m.you[0], m.you[2]), m.you[2]]; y.v = [0, 0, 0]; y.yaw = y.face = m.a === 'lobby' ? Math.PI : 0; y.pitch = -0.15;
     camSnap = true; S.travel = 0; fadeEl.classList.remove('on'); S.ready = true;
@@ -4001,6 +4081,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
       if (eventOn('goldmoon') && Math.random() < dt * 14) around(1, 2, p => emit(p, [0, 0.3, 0], 1.8, 0.1, 0, [1, 0.85, 0.3, 1], 0, 0, 2));
       if (S.events.inv && Math.random() < dt * 10) around(1, 2, p => emit(p, [0, 0.4, 0], 1.5, 0.2, 0.05, [1, 0.25, 0.35, 0.9], 0, 0, 2));
     }
+    eventParticles(dt, around, !A.env.cave && !A.env.indoor);
     // the field's own life
     const fid = S.aid;
     if (fid === 'meadow' && Math.random() < dt * 6) around(1, 0.5, p => emit(p, [rnd(-1, 1), rnd(-0.2, 0.4), rnd(-1, 1)], 3, 0.16, 0.16, hue3(Math.random()).concat([1]), 0, 0, 0));
@@ -4509,7 +4590,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     const reveal = () => {
       if (shown) return; shown = true; for (const t of OVL.t) clearTimeout(t); OVL.t = [];
       d.querySelector('.flash').classList.add('on'); SFX.eggCrack(); setTimeout(() => SFX.reveal(rr.i), 150);
-      const mu = [rat.mut, rat.wx, rat.disco ? 'disco' : null].filter(Boolean).map(m => '<span class="rc-pill" style="--c:' + MUTATIONS[m].col + '">' + MUTATIONS[m].n + '</span>').join(' ');
+      const mu = [rat.rev ? 'reverse' : null, rat.mut, rat.wx, rat.disco ? 'disco' : null].filter(Boolean).map(m => '<span class="rc-pill" style="--c:' + MUTATIONS[m].col + '">' + MUTATIONS[m].n + '</span>').join(' ');
       d.querySelector('[data-stage]').innerHTML = '<div class="rays" style="--c:' + rr.col + '"></div>' + ratImg(rat) + '<b>' + esc(RC.ratName(rat)) + '</b><span class="rc-pill" style="--c:' + rr.col + ';font-size:18px">' + rr.n + '</span>' + (mu ? '<div>' + mu + '</div>' : '') + (isNew ? '<span class="new">NEW IN YOUR INDEX!</span>' : '') +
         '<span class="rc-pill" style="--c:#c8f5c0;font-size:15px">' + fmtMoney(earnOf(rat, false)) + ' every second in a money slot</span><div class="tap">Click to continue</div>';
       d.style.setProperty('--c', rr.col);
@@ -4612,10 +4693,11 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     if (ev('dj')) { e.top = C3(e.top, [0.14, 0.04, 0.3], 0.65); e.hor = C3(e.hor, [0.62, 0.2, 0.72], 0.45); e.stars = Math.max(e.stars, 0.6); e.lightC = cmul(e.lightC, 0.6); e.amb = C3(e.amb, [0.5, 0.3, 0.7], 0.35); e.sunS *= 0.3; }
     if (w === 'ultra' || ev('ultra')) { e.rainbow = 1; e.moon = 1; e.moonC = [1, 0.6, 1]; e.neb = Math.max(e.neb, 0.5); e.nebA = [0.6, 0.2, 0.7]; e.nebB = [0.2, 0.5, 0.9]; }
     if (S.events.inv) { e.hor = C3(e.hor, [0.95, 0.32, 0.3], 0.35); e.fog = C3(e.fog, [0.6, 0.25, 0.25], 0.3); e.amb = C3(e.amb, [0.7, 0.4, 0.4], 0.15); }
+    eventSky(e, S.rt || 0, !cave);
     return e;
   }
   function envTick(dt) {
-    const t = envTarget(); if (!ENV.cur || ENV.snap) { ENV.cur = t; ENV.snap = false; return; }
+    eventScreen(dt); const t = envTarget(); if (!ENV.cur || ENV.snap) { ENV.cur = t; ENV.snap = false; return; }
     const k = 1 - Math.exp(-dt * 1.6), c = ENV.cur;
     for (const key in t) { const v = t[key]; if (Array.isArray(v)) c[key] = c[key] ? vlerp(c[key], v, k) : v.slice(); else c[key] = c[key] == null ? v : lerp(c[key], v, k); }
   }
@@ -4625,7 +4707,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   const QB = { a: new Float32Array(QMAX * 4 * QF), d: new Float32Array(QMAX * 4 * QF), na: 0, nd: 0 };
   const qbuf = gl.createBuffer(), qidx = gl.createBuffer();
   { const ix = new Uint16Array(QMAX * 6); for (let i = 0; i < QMAX; i++) { ix.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6); } gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, qidx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ix, gl.STATIC_DRAW); }
-  const KMODE = [0, 4, 2, 3, 4, 5, 6], KADD = [1, 0, 0, 1, 0, 1, 1];
+  const KMODE = [0, 4, 2, 3, 4, 5, 6, 7], KADD = [1, 0, 0, 1, 0, 1, 1, 1];
   function emit(p, v, life, s0, s1, col, drag, grav, kind) {
     if (PT.length >= PMAX || PASS !== 0) return;
     PT.push({ x: p[0], y: p[1], z: p[2], vx: v[0], vy: v[1], vz: v[2], life: life, age: 0, s0: s0, s1: s1 == null ? s0 : s1, c: col, drag: drag || 0, grav: grav || 0, k: kind || 0 });
@@ -4677,12 +4759,13 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
 
   // ---------- drawing meshes ----------
   const U = () => PW.u;
-  let curMut = -1;
+  let curMut = -1, curMX = '';
   function setLook(o) { // per-draw material uniforms (only the colour pass has materials)
     if (PASS !== 0) return;
     const u = PW.u; o = o || NOO;
     gl.uniform3fv(u.uTint, o.tint || [1, 1, 1]); gl.uniform1f(u.uEm, o.em || 0); gl.uniform1f(u.uA, o.a == null ? 1 : o.a);
     const m = o.mut || 0; if (m !== curMut) { gl.uniform1f(u.uMut, m); curMut = m; } gl.uniform3fv(u.uRim, o.rim || [0, 0, 0]);
+    const fx = o.fx || 0, iv = o.inv ? 1 : 0, k = fx * 2 + iv; if (k !== curMX) { gl.uniform2f(u.uMX, fx, iv); curMX = k; }
   }
   function drawM(mesh, M_) {
     if (!mesh || !mesh.b || !mesh.n) return;
@@ -4691,11 +4774,13 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   const IDM = (() => { const m = m4(); m[0] = m[5] = m[10] = m[15] = 1; return m; })();
   // a local point of a frame (r: mesh +x, u: up, f: forward) at scale s
   const loc3 = (p, r, u, f, l, s) => [p[0] + (r[0] * l[0] + u[0] * l[1] + f[0] * l[2]) * s, p[1] + (r[1] * l[0] + u[1] * l[1] + f[1] * l[2]) * s, p[2] + (r[2] * l[0] + u[2] * l[1] + f[2] * l[2]) * s];
-  const MUTI = { gold: 1, diamond: 2, rainbow: 3 };
+  const MUTI = { gold: 1, diamond: 2, rainbow: 3 }, WXFX = { aurora: 1, meteor: 2, pixel: 3, frozen: 4 };
   function lookMat(look, t) {
     const sp = SP[look.sp] || SP.brown, rr = RI[sp.r], col = hexc(rr.col), pulse = 0.65 + 0.35 * Math.sin(t * 3 + (rr.i * 1.7));
     const o = { mut: MUTI[look.mut] || 0, tint: [1, 1, 1], em: 0, rim: cmul(col, rr.glow * 0.45 * pulse + (look.evo || 0) * 0.12) };
     if (look.wx === 'rain') o.tint = [0.82, 0.92, 1.1]; else if (look.wx === 'snow') o.tint = [1.12, 1.14, 1.2]; else if (look.wx === 'thunder') { o.em = 0.12 + (Math.sin(t * 23) > 0.6 ? 0.35 : 0); o.tint = [1.08, 1.05, 0.85]; }
+    else if (WXFX[look.wx]) { o.fx = WXFX[look.wx]; if (look.wx === 'aurora') o.rim = cmix(o.rim, hue3(0.4 + 0.15 * Math.sin(t)), 0.5); if (look.wx === 'meteor') o.rim = cmix(o.rim, [1, 0.45, 0.1], 0.5); if (look.wx === 'frozen') o.rim = cmix(o.rim, [0.6, 0.9, 1], 0.5); }
+    if (look.rev) o.inv = 1;
     if (rr.i === 9) o.rim = cmul(hue3((t * 0.25) % 1), 0.9 * pulse);
     return o;
   }
@@ -4726,6 +4811,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   // cosmetic trails, particles and auras
   function ratLookFx(look, P, f, sc, o) {
     const dt = S.dt || 0.016, mv = o.mv || 0, lv = look.lvl || 0;
+    if (look.wx || look.rev) mutFx(look, P, sc, dt);
     // level milestones: sparkles from 25, a golden ring from 50, a rainbow ring at 100
     if (lv >= 25 && Math.random() < dt * (lv >= 75 ? 9 : 4)) emit([P[0] + rnd(-0.4, 0.4) * sc, P[1] + rnd(0.2, 0.8) * sc, P[2] + rnd(-0.4, 0.4) * sc], [0, rnd(0.3, 0.9), 0], 0.9, 0.09, 0, (lv >= 100 ? hue3(Math.random()) : lv >= 75 ? [0.75, 0.95, 1] : [1, 0.88, 0.4]).concat([1]), 0.5, 0, 6);
     if (lv >= 50) decal(P, 0.62 * sc + 0.04 * Math.sin(S.rt * 3), (lv >= 100 ? hue3((S.rt * 0.3) % 1) : lv >= 75 ? [0.7, 0.95, 1] : [1, 0.82, 0.3]).concat([0.45]), 3, true);
@@ -4859,7 +4945,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
   const cosKey = c => c ? Object.keys(c).sort().map(k => c[k]).join(',') : '';
-  const lookKey = l => 'r:' + l.sp + '|' + (l.mut || '') + '|' + (l.wx || '') + '|' + (l.disco ? 1 : 0) + '|' + (l.evo || 0) + '|' + cosKey(l.cos);
+  const lookKey = l => 'r:' + l.sp + '|' + (l.mut || '') + '|' + (l.wx || '') + '|' + (l.disco ? 1 : 0) + (l.rev ? 'R' : '') + '|' + (l.evo || 0) + '|' + cosKey(l.cos);
   function ratImg(look, extra) { const k = lookKey(look); return '<img data-pk="' + esc(k) + '" src="' + (SNAP.cache.get(k) || queueSnap(k, { kind: 'rat', look })) + '" alt=""' + (extra || '') + '>'; }
   function eggImg(id) { const k = 'e:' + id; return '<img data-pk="' + k + '" src="' + (SNAP.cache.get(k) || queueSnap(k, { kind: 'egg', id })) + '" alt="">'; }
   function queueSnap(k, job) { if (!SNAP.pend.has(k)) { SNAP.pend.add(k); job.k = k; SNAP.q.push(job); } return BLANK; }
@@ -4878,7 +4964,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     if (isEgg) { setLook({}); model(MM, [0, 0, 0], [0, 0, 1], UP, 1); drawM(eggMesh(job.id)); }
     else drawRat(look, [0, 0, 0], 0.55, 1, { t: 2.5, ph: 0, mv: 0 });
     const px = new Uint8Array(SNAP.R * SNAP.R * 4); gl.readPixels(0, 0, SNAP.R, SNAP.R, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); curMut = -1;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); curMut = -1; curMX = '';
     const cx = SNAP.cv.getContext('2d'), id = cx.createImageData(SNAP.R, SNAP.R), row = SNAP.R * 4;
     for (let y = 0; y < SNAP.R; y++) id.data.set(px.subarray((SNAP.R - 1 - y) * row, (SNAP.R - y) * row), y * row);
     cx.putImageData(id, 0, 0);
@@ -4917,7 +5003,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     c.fillStyle = '#fff'; c.font = font(38); c.textAlign = 'center'; c.fillText('EVENT BOARD', 768, 46);
     const act = (S.events.active || []).slice(), y0 = 100; let y = y0;
     if (S.events.inv) { c.fillStyle = '#ff3a5c'; c.fillRect(526, y, 484, 62); c.fillStyle = '#fff'; c.font = font(28); c.textAlign = 'left'; c.fillText('RAT INVASION!', 540, y + 22); c.font = font(20, 600); c.fillText('Ends in ' + fmtDur((S.events.inv.ends - srvNow()) / 1000), 540, y + 47); y += 72; }
-    for (const e of act) { const d = EVENTS[e.id]; if (!d) continue; c.fillStyle = d.col; c.fillRect(526, y, 484, 62); c.fillStyle = '#2b1d3a'; c.font = font(28); c.textAlign = 'left'; c.fillText(d.n, 540, y + 22, 300); c.font = font(19, 600); c.fillText(d.d, 540, y + 47, 460); c.textAlign = 'right'; c.font = font(24); c.fillText(fmtDur((e.ends - srvNow()) / 1000), 998, y + 22); y += 70; if (y > 440) break; }
+    for (const e of act) { const d = EVENTS[e.id]; if (!d) continue; c.fillStyle = d.col; c.fillRect(526, y, 484, 62); c.fillStyle = '#2b1d3a'; c.font = font(28); c.textAlign = 'left'; c.fillText(d.n, 540, y + 22, 300); c.font = font(19, 600); c.fillText(RC.evDesc(S.cfg, e.id), 540, y + 47, 460); c.textAlign = 'right'; c.font = font(24); c.fillText(fmtDur((e.ends - srvNow()) / 1000), 998, y + 22); y += 70; if (y > 440) break; }
     if (y === y0) { c.fillStyle = '#6a5a7a'; c.textAlign = 'center'; c.font = font(26, 600); c.fillText('No event right now.', 768, 200); c.font = font(20, 500); c.fillText('Events start by themselves every', 768, 250); c.fillText('20 to 40 minutes, or when the owner', 768, 278); c.fillText('starts one. Every room gets them.', 768, 306); }
     BOARD.dirty = true;
   }
@@ -4973,8 +5059,9 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
       const rr = RI[SP[r.sp].r], sz = rr.size, gone = r.gone ? Math.max(0, 1 - (S.rt - r.gone) * 3) : 1, born = Math.min(1, (S.rt - r.born) * 3), sc = sz * easeOut(born) * gone;
       if (sc <= 0.01) continue;
       const held = r.st === 'h';
-      r.draw = drawRat(r, [r.x, r.y, r.z], r.h, sc, { ph: r.ph, mv: r.mv, held, fx: false });
+      r.draw = drawRat(r, [r.x, r.y + ufoLift(r), r.z], r.h, sc, { ph: r.ph, mv: r.mv, held, fx: false });
       if (PASS !== 0) continue;
+      if ((r.wx || r.rev) && Math.hypot(r.x - S.you.p[0], r.z - S.you.p[2]) < 35) mutFx(r, [r.x, r.y, r.z], sz, S.dt || 0.016);
       decal([r.x, r.y, r.z], 0.55 * sc, [0, 0, 0, 0.32 * GFX.blob], 0, false);
       const dme = Math.hypot(r.x - S.you.p[0], r.z - S.you.p[2]);
       if (dme < 40 && !held) { const mc = rr.i ? hexc(rr.col) : [1, 1, 1]; bill([r.x, r.y + 1.15 * sz + 0.12 * Math.sin(t * 3 + r.ph), r.z], 0.16 + 0.05 * Math.sin(t * 5 + r.ph), mc.concat([clamp(1.4 - dme / 40, 0.25, 0.9)]), 5, true); }
@@ -5056,7 +5143,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     blur(B[2], B[1].tex, 1 / B[1].w, 0); blur(B[1], B[2].tex, 0, 1 / B[1].h);
     down(B[3], B[1].tex, B[1].w, B[1].h, 0); blur(B[4], B[3].tex, 1 / B[3].w, 0); blur(B[3], B[4].tex, 0, 1 / B[3].h);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, B[1].tex); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, B[3].tex);
-    pass(PPC, null, RT.tex, u => { gl.uniform2f(u.uPx, 1 / RT.w, 1 / RT.h); gl.uniform4f(u.uPP, RT.ms ? 0 : 1, 1.0, 1.1, 0.24); });
+    pass(PPC, null, RT.tex, u => { gl.uniform2f(u.uPx, 1 / RT.w, 1 / RT.h); gl.uniform4f(u.uPP, RT.ms ? 0 : 1, 1.0, 1.1, 0.24); gl.uniform4f(u.uFX, EFX.pix, EFX.frost, S.rt % 100, EFX.alien); });
     gl.activeTexture(gl.TEXTURE0); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); setPass(0);
   }
   function render(dt) {
@@ -5078,7 +5165,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
     gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.CULL_FACE);
     if (A) {
       // world
-      gl.useProgram(PW.p); const u = PW.u; curMut = -1; setPass(0);
+      gl.useProgram(PW.p); const u = PW.u; curMut = -1; curMX = ''; setPass(0);
       gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uCam, CAM.p); gl.uniform3fv(u.uSun, e.sun); gl.uniform3fv(u.uSunC, e.lightC); gl.uniform3fv(u.uSky, e.amb); gl.uniform3fv(u.uGnd, e.gnd);
       gl.uniform3fv(u.uFog, e.fog); gl.uniform1f(u.uFogD, e.fogD); gl.uniform1f(u.uT, t); const fl = S.flash > 0 ? S.flash * S.flash : 0; gl.uniform3fv(u.uFlash, [fl * 0.6, fl * 0.62, fl * 0.7]);
       gl.uniform1f(u.uGlow, glow); gl.uniform1f(u.uExpo, e.expo);
@@ -5109,8 +5196,8 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
         drawActors(t, A, [CAM.p[0], 0, CAM.p[2], 34]);
         setPass(0); gl.cullFace(gl.BACK); gl.disable(gl.CULL_FACE); gl.useProgram(PW.p);
       }
-      // fishing lines and bobbers
-      castLines(t);
+      // fishing lines and bobbers, then meteors, UFOs and other event effects
+      castLines(t); eventFxDraw(t, dt);
       // see-through things (water, glass, portals); their glow goes in with a second, alpha-only draw
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); setLook({});
       if (glow) gl.colorMask(true, true, true, false);
@@ -5154,6 +5241,15 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
       pill(sp[0], y, o.n + '  ·  Lv ' + (o.lvl || 1), { fs: 14, a, bg: o.c || '#fff', fg: '#fff' });
       socialTag(o, sp[0], y, a);
     }
+    // labels over special new rats: twins, UFO drops and event rats
+    for (const r of S.frats.values()) {
+      if (!r.ev || r.ev < 3) continue; const age = S.rt - r.born, life = r.ev === 3 ? 4 : 2.6; if (age > life) continue;
+      const d = Math.hypot(r.x - S.you.p[0], r.z - S.you.p[2]); if (d > 40) continue;
+      const sp = toScreen([r.x, r.y + ufoLift(r) + 1.6, r.z]); if (!sp) continue; const a = clamp((life - age) / 0.6, 0, 1) * clamp(1.5 - d / 40, 0.3, 1), pop = 1 + 0.25 * Math.max(0, 1 - age * 4);
+      if (r.ev === 4) pill(sp[0], sp[1] - 8 * pop, '✨ TWINS! ✨', { fs: 15 * pop, a, bg: '#ff9fcf', fg: '#fff' });
+      else if (r.ev === 3) pill(sp[0], sp[1] - 8 * pop, '🛸 Beamed down!', { fs: 14 * pop, a, bg: '#7aff6a' });
+      else if (r.ev === 5) { const ex = SP[r.sp], ev = ex && RC.EVENTS[ex.evx]; pill(sp[0], sp[1] - 8 * pop, '★ ' + (ex ? ex.n : 'Event rat') + ' ★', { fs: 14 * pop, a, bg: ev ? ev.col : '#ffd23a' }); }
+    }
     if (S.aid === 'lobby') {
       for (let i = 0; i < S.roster.length && i < 20; i++) { const pl = S.roster[i], st = RC.showcaseStand(i), d = Math.hypot(st.x - S.you.p[0], st.z - S.you.p[2]); if (d > 16) continue; const sp = toScreen([st.x, 2.0, st.z]); if (sp) pill(sp[0], sp[1], (pl.n || '?') + "'s showcase", { fs: 12, a: clamp(1.6 - d / 16, 0.35, 1) }); }
     } else {
@@ -5177,11 +5273,133 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   }
 
 
+  // ===================== event visuals: aurora, meteors, Pixel Party, Frozen Over, UFOs and twins =====================
+  const onlyEv = id => (S.events.active || []).some(e => e.id === id); // not ULTRA (screen effects would be too much at once)
+  const EFX = { pix: 0, frost: 0, alien: 0 }, MET = [], CRAT = [], UFOS = [];
+  let metT = 0, ufoMeshC = null, ufoHum = 0;
+
+  // ---------- the sky ----------
+  function eventSky(e, t, outdoor) {
+    const C = cmix;
+    if (eventOn('aurora')) { e.top = C(e.top, [0.02, 0.05, 0.12], 0.75); e.hor = C(e.hor, [0.08, 0.26, 0.3], 0.55); e.aur = Math.max(e.aur || 0, 1.4); e.stars = Math.max(e.stars, 0.9); e.sunS *= 0.2; e.lightC = cmul(C(e.lightC, [0.5, 0.95, 0.85], 0.4), 0.72); e.amb = C(e.amb, [0.3, 0.6, 0.6], 0.32); e.fog = C(e.fog, [0.1, 0.25, 0.3], 0.4); }
+    if (eventOn('meteor')) { e.top = C(e.top, [0.1, 0.04, 0.1], 0.65); e.hor = C(e.hor, [0.9, 0.42, 0.22], 0.5); e.stars = Math.max(e.stars, 0.85); e.sunS *= 0.3; e.lightC = C(e.lightC, [1, 0.62, 0.4], 0.35); e.amb = C(e.amb, [0.6, 0.38, 0.35], 0.2); e.fog = C(e.fog, [0.45, 0.25, 0.22], 0.35); }
+    if (onlyEv('pixel')) { const h = (t * 0.05) % 1; e.top = C(e.top, cmul(hue3(h), 0.35), 0.6); e.hor = C(e.hor, hue3((h + 0.45) % 1), 0.45); e.neb = Math.max(e.neb, 0.55); e.nebA = hue3((h + 0.2) % 1); e.nebB = hue3((h + 0.7) % 1); e.stars = Math.max(e.stars, 0.6); e.amb = C(e.amb, hue3((h + 0.3) % 1), 0.15); }
+    if (eventOn('frozen')) { e.top = C(e.top, [0.55, 0.75, 0.95], 0.45); e.hor = C(e.hor, [0.86, 0.94, 1], 0.65); if (outdoor) { e.clouds = Math.max(e.clouds, 0.7); e.cloudC = [0.95, 0.97, 1]; } e.lightC = C(e.lightC, [0.85, 0.93, 1], 0.45); e.amb = C(e.amb, [0.72, 0.85, 1], 0.35); e.gnd = C(e.gnd, [0.92, 0.96, 1], 0.6); e.fog = C(e.fog, [0.86, 0.93, 1], 0.55); e.fogD *= 1.25; }
+    if (eventOn('alien')) { e.top = C(e.top, [0.02, 0.1, 0.05], 0.6); e.hor = C(e.hor, [0.32, 0.85, 0.42], 0.4); e.neb = Math.max(e.neb, 0.5); e.nebA = [0.2, 0.9, 0.35]; e.nebB = [0.55, 0.2, 0.95]; e.stars = Math.max(e.stars, 0.7); e.amb = C(e.amb, [0.42, 0.8, 0.48], 0.25); e.sunS *= 0.5; }
+    if (eventOn('double')) { e.hor = C(e.hor, [1, 0.74, 0.9], 0.4); e.rainbow = Math.max(e.rainbow, 0.55); e.amb = C(e.amb, [1, 0.85, 0.95], 0.15); e.lightC = C(e.lightC, [1, 0.9, 0.97], 0.2); }
+  }
+  // screen effects (smoothly in and out): pixels, frost on the edges, a green scanline glow
+  function eventScreen(dt) {
+    const k = 1 - Math.exp(-dt * 1.5), cave = S.A && (S.A.env.cave || S.A.env.indoor);
+    EFX.pix += ((onlyEv('pixel') ? 1 : 0) - EFX.pix) * k; EFX.frost += ((onlyEv('frozen') ? 1 : 0) - EFX.frost) * k; EFX.alien += ((onlyEv('alien') && !cave ? 1 : 0) - EFX.alien) * k;
+  }
+
+  // ---------- particles around the player and meteors ----------
+  function eventParticles(dt, around, outdoor) {
+    const A = S.A, y = S.you.p, R = Math.random;
+    if (eventOn('aurora') && R() < dt * 16) around(1, 1, p => emit(p, [rnd(-0.2, 0.2), rnd(0.2, 0.6), rnd(-0.2, 0.2)], 3.5, 0.16, 0.02, (R() < 0.6 ? [0.25, 1, 0.65, 0.9] : [0.7, 0.35, 1, 0.9]), 0, 0, 0));
+    if (onlyEv('pixel')) {
+      if (R() < dt * 30) around(1, 0.5, p => emit(p, [rnd(-0.4, 0.4), rnd(0.3, 1.1), rnd(-0.4, 0.4)], 2.6, 0.2, 0.2, hue3(R()).concat([1]), 0, 0, 7));
+      if (R() < dt * 4) around(1, 0, p => emit([p[0], A.height(p[0], p[2]) + 0.06, p[2]], [0, 0, 0], 1.0, 1.4, 1.4, hue3(R()).concat([0.55]), 0, 0, 7)); // floor tiles light up
+    }
+    if (eventOn('frozen') && outdoor) {
+      around(Math.round(dt * 70), 5, p => emit(p, [rnd(-0.8, 0.8), -1.4, rnd(-0.8, 0.8)], 4.5, 0.08, 0.08, [1, 1, 1, 0.95], 0, 0, 2));
+      if (R() < dt * 18) around(1, 0.6, p => emit(p, [0, 0.05, 0], 1.2, 0.18, 0, [0.8, 0.95, 1, 1], 0, 0, 6));
+    }
+    if (eventOn('double') && R() < dt * 12) around(1, 1.2, p => { const c = R() < 0.5 ? [1, 0.55, 0.85, 1] : [1, 0.85, 0.35, 1]; emit(p, [0.25, 0.3, 0], 2, 0.13, 0, c, 0, 0, 6); emit([p[0] + 0.6, p[1], p[2]], [-0.25, 0.3, 0], 2, 0.13, 0, c, 0, 0, 6); });
+    if (eventOn('alien') && R() < dt * 8) around(1, 0.4, p => emit(p, [0, rnd(0.4, 0.9), 0], 2, 0.14, 0.02, [0.45, 1, 0.5, 0.9], 0, 0, 0));
+    // meteors: streaks out of the sky that hit the ground nearby
+    if (eventOn('meteor') && outdoor) {
+      metT -= dt;
+      if (metT <= 0 && MET.length < 8) {
+        metT = rnd(0.5, 1.6); const a = R() * TAU, d = rnd(12, 55), tx = y[0] + Math.cos(a) * d, tz = y[2] + Math.sin(a) * d, ty = A.height(tx, tz);
+        const dir = norm([rnd(-0.6, 0.6), 1, rnd(-0.6, 0.6)]), from = [tx + dir[0] * 110, ty + dir[1] * 110, tz + dir[2] * 110], sp = rnd(42, 60), big = R() < 0.25;
+        MET.push({ p: from, v: mul(dir, -sp), to: [tx, ty, tz], big, s: big ? 1.6 : 1.0 });
+      }
+    }
+    for (let i = MET.length - 1; i >= 0; i--) {
+      const m = MET[i]; m.p = madd(m.p, m.v, dt);
+      if (R() < dt * 60) emit(m.p, [rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)], 0.9, 0.35 * m.s, 1.2 * m.s, [0.35, 0.25, 0.22, 0.4], 0.5, 0, 1);
+      if (m.p[1] <= m.to[1] + 0.2) { // impact
+        MET.splice(i, 1); const p = [m.to[0], m.to[1] + 0.3, m.to[2]], d = Math.hypot(p[0] - y[0], p[2] - y[2]);
+        burst(p, m.big ? 40 : 22, m.big ? 9 : 6, [1, 0.55, 0.15, 1], 1.4, 0.16, { up: true, grav: 9 });
+        for (let k = 0; k < (m.big ? 10 : 5); k++) emit(p, [rnd(-1.5, 1.5), rnd(1, 3), rnd(-1.5, 1.5)], 3.5, 0.8, 2.6, [0.3, 0.26, 0.24, 0.5], 0.6, -0.1, 1);
+        CRAT.push({ p: [m.to[0], m.to[1], m.to[2]], t: S.rt, big: m.big });
+        if (d < 35) { S.flash = Math.max(S.flash || 0, (m.big ? 0.45 : 0.25) * (1 - d / 35)); SFX.meteor(m.big, 1 - d / 35); }
+      }
+    }
+    for (let i = CRAT.length - 1; i >= 0; i--) if (S.rt - CRAT[i].t > 8) CRAT.splice(i, 1);
+  }
+
+  // ---------- drawn every frame: meteors, craters, UFOs and beams ----------
+  function ufoMesh() {
+    if (ufoMeshC) return ufoMeshC; const B = new MB();
+    sph(B, [0, 0, 0], 1.6, 2, [0.72, 0.76, 0.84], { m: M.METAL, sc: [1, 0.24, 1] });
+    sph(B, [0, 0.28, 0], 0.72, 2, [0.55, 1, 0.65], { m: M.GLOSS, sc: [1, 0.75, 1], e: 0.35 });
+    cyl(B, 0.9, 0.55, -0.5, -0.28, 16, [0.3, 0.32, 0.38], { m: M.METAL });
+    for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; sph(B, [Math.cos(a) * 1.35, -0.05, Math.sin(a) * 1.35], 0.12, 1, hue3(i / 10), { e: 1.2, flat: true }); }
+    return (ufoMeshC = upload(B.build()));
+  }
+  function drawUfo(p, spin, beam, groundY, t) {
+    setLook({ em: 0.05 }); model(MM, p, fwdOf(spin), UP, 1); drawM(ufoMesh());
+    bill([p[0], p[1] - 0.45, p[2]], 1.2 + 0.2 * Math.sin(t * 9), [0.5, 1, 0.55, 0.8], 5, true);
+    if (beam > 0) {
+      const g = [p[0], groundY, p[2]], a = beam;
+      ribbon([p[0], p[1] - 0.5, p[2]], g, 1.3 + 0.25 * Math.sin(t * 7), [0.45, 1, 0.55, 0.32 * a], true);
+      ribbon([p[0], p[1] - 0.5, p[2]], g, 0.55, [0.85, 1, 0.85, 0.45 * a], true);
+      decal(g, 2.2 + 0.3 * Math.sin(t * 6), [0.5, 1, 0.55, 0.6 * a], 3, true); decal(g, 1.3, [0.6, 1, 0.6, 0.35 * a], 0, true);
+      if (Math.random() < 0.5) emit([g[0] + rnd(-1, 1), g[1] + rnd(0, 1), g[2] + rnd(-1, 1)], [0, rnd(2, 5), 0], 1.2, 0.12, 0, [0.6, 1, 0.65, 1], 0, 0, 6);
+    }
+  }
+  function eventFxDraw(t, dt) {
+    if (PASS !== 0 || !S.A) return;
+    const A = S.A, y = S.you.p;
+    for (const m of MET) { // head and burning trail
+      bill(m.p, 0.9 * m.s, [1, 0.85, 0.5, 1], 5, true); bill(m.p, 2.2 * m.s, [1, 0.45, 0.12, 0.5], 0, true);
+      ribbon(m.p, madd(m.p, m.v, -0.32), 0.55 * m.s, [1, 0.55, 0.18, 0.75], true); ribbon(m.p, madd(m.p, m.v, -0.12), 0.25 * m.s, [1, 0.95, 0.75, 0.9], true);
+    }
+    for (const c of CRAT) { const k = (S.rt - c.t) / 8, s = c.big ? 2.4 : 1.6; decal(c.p, s * (1 + k * 0.3), [1, 0.4 + 0.3 * (1 - k), 0.1, 0.85 * (1 - k)], 3, true); decal(c.p, s * 0.9, [0.05, 0.03, 0.03, 0.6 * (1 - k)], 0, false); }
+    // UFOs circling over the field while the Alien Invasion is on
+    const cave = A.env.cave || A.env.indoor;
+    if (eventOn('alien') && !cave) {
+      for (let i = 0; i < 3; i++) { const a = t * (0.18 + i * 0.05) + i * 2.1, r = 26 + i * 9, p = [y[0] + Math.cos(a) * r, 30 + i * 4 + Math.sin(t * 0.7 + i) * 2, y[2] + Math.sin(a) * r]; drawUfo(p, t * 2 + i, 0, 0, t); }
+      ufoHum -= dt; if (ufoHum <= 0) { ufoHum = rnd(5, 9); SFX.ufo(0.35); }
+    }
+    // UFO drops: a saucer comes down over the rat and beams it to the ground
+    for (const r of S.frats.values()) {
+      if (r.ev !== 3) continue; const age = S.rt - r.born; if (age > 3.4) continue;
+      const gy = A.height(r.x, r.z), drop = clamp(age / 0.7, 0, 1), leave = clamp((age - 2.7) / 0.7, 0, 1);
+      const p = [r.x, gy + 34 - 22 * easeOut(drop) + 30 * leave * leave, r.z];
+      drawUfo(p, t * 3, (drop >= 1 && leave < 0.5 ? 1 - leave * 2 : 0) * clamp((age - 0.6) * 4, 0, 1), gy, t);
+      if (!r.beamed && age > 0.6) { r.beamed = 1; const d = Math.hypot(r.x - y[0], r.z - y[2]); if (d < 45) SFX.ufo(1 - d / 45); }
+    }
+    // twins: a pink and gold pop when they appear
+    for (const r of S.frats.values()) {
+      if (r.ev !== 4 || r.popped) continue; r.popped = 1; if (S.rt - r.born > 1) continue;
+      const p = [r.x, A.height(r.x, r.z) + 0.5, r.z];
+      burst(p, 18, 3.5, [1, 0.55, 0.85, 1], 1.1, 0.12, { up: true, grav: 3, kind: 6 }); burst(p, 12, 3, [1, 0.85, 0.35, 1], 1.1, 0.12, { up: true, grav: 3, kind: 6 });
+      if (Math.hypot(r.x - y[0], r.z - y[2]) < 30) SFX.twin();
+    }
+  }
+  // how high a rat being beamed down is above the ground
+  function ufoLift(r) { if (r.ev !== 3) return 0; const age = S.rt - r.born; if (age > 2.7) return 0; const k = clamp((age - 0.7) / 2.0, 0, 1); return age < 0.7 ? 10 : 10 * (1 - easeOut(k)); }
+
+  // ---------- particles on rats with the event mutations, and Reverse ----------
+  function mutFx(look, P, sc, dt) {
+    const R = Math.random, w = look.wx, at = (h, s) => [P[0] + rnd(-0.4, 0.4) * sc * (s || 1), P[1] + h * sc, P[2] + rnd(-0.4, 0.4) * sc * (s || 1)];
+    if (w === 'aurora' && R() < dt * 9) emit(at(rnd(0.2, 0.9)), [0, rnd(0.4, 1), 0], 1.4, 0.12, 0, R() < 0.5 ? [0.2, 1, 0.6, 0.9] : [0.7, 0.35, 1, 0.9], 0, 0, 0);
+    if (w === 'meteor') { if (R() < dt * 14) emit(at(0.5, 0.75), [rnd(-0.3, 0.3), rnd(0.8, 1.8), rnd(-0.3, 0.3)], 0.9, 0.07, 0.02, [1, 0.55, 0.15, 1], 0.5, -0.2, 2); if (R() < dt * 3) emit(at(0.7, 0.3), [0, 0.8, 0], 1.8, 0.15, 0.5, [0.25, 0.22, 0.2, 0.35], 0.3, 0, 1); }
+    if (w === 'pixel' && R() < dt * 8) emit(at(rnd(0.2, 0.9)), [0, rnd(0.3, 0.8), 0], 1.2, 0.09, 0.09, hue3(R()).concat([1]), 0, 0, 7);
+    if (w === 'frozen' && R() < dt * 8) emit(at(1.0), [rnd(-0.2, 0.2), -0.4, rnd(-0.2, 0.2)], 1.6, 0.07, 0.07, [0.85, 0.95, 1, 1], 0, 0, 6);
+    if (look.rev && R() < dt * 7) emit(at(rnd(0.3, 0.9)), [0, 0.5, 0], 1, 0.11, 0, R() < 0.5 ? [0.05, 0.05, 0.08, 0.9] : [1, 1, 1, 1], 0, 0, 6);
+  }
+
+
   // ===================== station windows: shop, eggs, the rat bank and your rats =====================
   const SLOT_N = { head: 'Hat', face: 'Glasses', neck: 'Neck', back: 'Back', trail: 'Trail', fx: 'Particles', aura: 'Aura' };
   const CAT_IC = { Hats: '🎩', Sunglasses: '🕶️', Crowns: '👑', Chains: '📿', Wings: '🪽', Back: '🎒', Trails: '🌈', Particles: '✨', Auras: '🔥', Disco: '🪩' };
   const PLACE_N = { inv: 'Backpack', sto: 'Storage', slot: 'Money slot', eq: 'Pet' };
-  const mutList = r => [r.mut, r.wx, r.disco ? 'disco' : null].filter(Boolean);
+  const mutList = r => [r.rev ? 'reverse' : null, r.mut, r.wx, r.disco ? 'disco' : null].filter(Boolean);
   const mutPills = r => mutList(r).map(m => '<span class="rc-pill" style="--c:' + MUTATIONS[m].col + '">' + MUTATIONS[m].n + ' ×' + (S.cfg.mutMult[m] || MUTATIONS[m].mult) + '</span>').join(' ');
   const rarPill = id => '<span class="rc-pill" style="--c:' + RI[id].col + '">' + RI[id].n + '</span>';
   const money = v => '<span style="color:#1d7a2e;font-weight:700">' + fmtMoney(v) + '</span>';
@@ -5539,10 +5757,10 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
         const t = srvNow(), act = S.events.active || [], L = ltdState(), dur = id => (S.cfg.eventDur && S.cfg.eventDur[id]) || EVENTS[id].dur;
         b.innerHTML = '<div class="rc-h3">Happening now</div><div class="rc-list">' +
           (S.events.inv ? '<div class="rc-li" style="background:#ffe3e6"><span class="ic">👾</span><div class="t"><b>Rat Invasion!</b><small>Invader rats you can’t find anywhere else are in every field, and many more rats appear. Ends in ' + fmtDur((S.events.inv.ends - t) / 1000) + '.</small></div></div>' : '') +
-          act.map(e => { const d = EVENTS[e.id]; return d ? '<div class="rc-li" style="background:color-mix(in srgb,' + d.col + ' 30%,#fff)"><span class="ic">✨</span><div class="t"><b>' + esc(d.n) + '</b><small>' + esc(d.d) + ' Ends in ' + fmtDur((e.ends - t) / 1000) + '.</small></div></div>' : ''; }).join('') +
+          act.map(e => { const d = EVENTS[e.id]; return d ? '<div class="rc-li" style="background:color-mix(in srgb,' + d.col + ' 30%,#fff)"><span class="ic">✨</span><div class="t"><b>' + esc(d.n) + '</b><small>' + esc(RC.evDesc(S.cfg, e.id)) + ' Ends in ' + fmtDur((e.ends - t) / 1000) + '.</small></div></div>' : ''; }).join('') +
           (!act.length && !S.events.inv ? '<div class="rc-empty">No event right now. Events start by themselves every so often, or when the owner starts one.</div>' : '') + '</div>' +
-          '<div class="rc-row" style="margin:10px 0"><span class="rc-pill">Weather: ' + ({ clear: '☀️ Clear', rain: '🌧️ Rain', snow: '❄️ Snow', storm: '⛈️ Storm', ultra: '🌈 Ultra' }[S.events.weather] || S.events.weather) + '</span><span class="rc-pill" style="--c:#ffd0e0">Limited-Time Egg: ' + esc(L.text) + '</span></div>' +
-          '<div class="rc-h3">Every event</div><div class="rc-shop">' + Object.keys(EVENTS).map(id => { const d = EVENTS[id]; return '<div class="rc-item" style="--c:' + d.col + '"><b>' + esc(d.n) + '</b><small>' + esc(d.d) + '</small><small>Lasts ' + fmtDur(dur(id)) + '</small></div>'; }).join('') + '</div>' +
+          '<div class="rc-row" style="margin:10px 0"><span class="rc-pill">Weather: ' + ({ clear: '☀️ Clear', rain: '🌧️ Rain', snow: '❄️ Snow', storm: '⛈️ Storm', ultra: '🌈 Ultra' }[S.events.weather] || S.events.weather) + '</span></div>' +
+          '<div class="rc-h3">Every event</div><div class="rc-shop">' + Object.keys(EVENTS).map(id => { const d = EVENTS[id]; return '<div class="rc-item" style="--c:' + d.col + '"><b>' + esc(d.n) + '</b><small>' + esc(RC.evDesc(S.cfg, id)) + '</small><small>Lasts ' + fmtDur(dur(id)) + '</small></div>'; }).join('') + '</div>' +
           (S.annLog.length ? '<div class="rc-h3" style="margin-top:14px">Recent announcements</div><div class="rc-list">' + S.annLog.slice(0, 10).map(a => '<div class="rc-li"><span class="ic">📢</span><div class="t"><b>' + esc(a.text) + '</b><small>' + new Date(a.at || Date.now()).toLocaleTimeString() + '</small></div></div>').join('') + '</div>' : '');
       },
       on(w) { return w === 'events' || w === 'ann' || w === 'cfg'; } });
@@ -5683,10 +5901,10 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
           '<div class="rc-break"><div><span>Permanent luck</span><b>+' + luckNow + '% → +' + luckNext + '%</b></div><div><span>Permanent earnings</span><b>+' + earnNow + '% → +' + earnNext + '%</b></div><div><span>New title</span><b>Reborn' + (n + 1 > 1 ? ' ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][Math.min(10, n + 1)] : '') + '</b></div>' +
           (n === 0 ? '<div><span>Special area</span><b>Reborn Sanctuary opens</b></div><div><span>Cosmetic</span><b>Reborn Crown</b></div>' : n === 4 ? '<div><span>Cosmetic</span><b>Reborn Aura</b></div>' : '') + '</div></div>' +
           '<div style="display:grid;gap:10px;align-content:start"><div class="rc-h3" style="color:#c0303a">What resets</div><ul style="margin:0;padding-left:18px;font-weight:600">' + W.st.resets.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' +
-          '<div class="rc-h3" style="color:#1d7a2e">What you keep</div><ul style="margin:0;padding-left:18px;font-weight:600"><li>Every rat: backpack, storage, money slots and pets</li><li>Money slots, storage and backpack upgrades</li><li>Rods, potions, eggs, Mystery Boxes and cosmetics</li><li>Your Rat Index, achievements and titles</li></ul></div></div>' +
+          '<div class="rc-h3" style="color:#1d7a2e">What you keep</div><ul style="margin:0;padding-left:18px;font-weight:600"><li>Every rat: backpack, storage, money slots and pets</li><li>Money slots, storage and backpack upgrades</li><li>Rods, potions, Mystery Boxes and cosmetics</li><li>Your Rat Index, achievements and titles</li></ul></div></div>' +
           '<div class="rc-row end" style="margin-top:14px">' + (ok ? '<button class="rc-b p" data-act="go">♻️ Rebirth now</button>' : '<span class="rc-note">Reach level ' + need + ' to rebirth.</span>') + '</div>';
       },
-      sig: () => [S.me.level, S.me.rebirths, Math.floor(S.me.money), JSON.stringify(S.cfg.rebirthLevel)].join(),
+      sig: () => [S.me.level, S.me.rebirths, Math.floor(Math.log10(S.me.money + 1) * 20), JSON.stringify(S.cfg.rebirthLevel)].join(), // money only roughly: redrawing every second would swallow clicks
       act(a) { if (a !== 'go') return; const R = WIN.st.resets; confirmBox('', 'Rebirth', () => nsend({ t: 'rebirth', confirm: 1 }), { danger: true, icon: '♻️', title: 'Rebirth now?', html: '<p>This will happen:</p><ul style="font-weight:600">' + R.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><p>You keep every rat and item. This can’t be undone.</p>' }); },
       on(w) { return w === 'me' || w === 'cfg'; } });
   }
@@ -5788,7 +6006,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   }
   function frame(now) {
     if (!alive) return; raf = win.requestAnimationFrame(frame);
-    const raw = Math.max(0.001, (now - (last || now)) / 1000), dt = S.paused ? 0 : Math.min(0.05, raw); last = now; S.dt = dt; S.rt += dt; // (tests can pause the clock to look at one moment)
+    const raw = Math.max(0.001, (now - (last || now)) / 1000), dt = S.paused ? 0 : S.dtOver || Math.min(0.05, raw); last = now; S.dt = dt; S.rt += dt; // (tests can pause the clock to look at one moment)
     fpsAcc += Math.min(raw, 2); fpsN++; if (fpsAcc > 1) { S.fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
     readPads(); keys();
     if (S.ready && S.A) {
@@ -5827,7 +6045,7 @@ const fmtMoney = RC.fmtMoney, fmtN = RC.fmtN, fmtDur = RC.fmtDur;
   };
   if (opts.test) {
     // helpers for automated tests (only when the page asks for them)
-    api.T = { S, NET, IN, CAM, store, ui, GFX, send: nsend, HOST, isHosted, visitRoom, goHome, isPeer, peerInfo, openRooms, CHAT, VOICE, MATCH, chatOpen, voiceToggle, findLobby, tryCast, interact, travel, openStation, closeWin, menuOpen, uiOpen, renderWin, snapLeft: () => SNAP.q.length + SNAP.pend.size,
+    api.T = { S, NET, IN, CAM, store, ui, GFX, send: nsend, HOST, isHosted, fxSnap() { ENV.snap = true; for (let i = 0; i < 30; i++) eventScreen(0.5); }, visitRoom, goHome, isPeer, peerInfo, openRooms, CHAT, VOICE, MATCH, chatOpen, voiceToggle, findLobby, tryCast, interact, travel, openStation, closeWin, menuOpen, uiOpen, renderWin, snapLeft: () => SNAP.q.length + SNAP.pend.size,
       win: () => WIN && WIN.id,
       aimAt(id) { // point the camera's crosshair at a rat (the camera sits over the right shoulder, so aim from its pivot)
         const r = S.frats.get(id); if (!r) return false; const y = S.you, sz = RI[SP[r.sp].r].size, tg = [r.x, r.y + 0.35 * sz, r.z];

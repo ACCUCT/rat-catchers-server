@@ -62,6 +62,12 @@ const SPECIES = [
   { id: 'ninja', n: 'Ninja Rat', r: 'superrare', earn: 750, inv: 1, d: 'You only see it when it wants you to.', fur: '#24242c', belly: '#3a3a44', parts: ['ninja'], fields: [] },
   { id: 'robo', n: 'Robo Rat', r: 'legendary', earn: 3000, inv: 1, d: 'Beep boop. Runs on cheese-powered batteries.', fur: '#b8c4d0', belly: '#e8eef4', eye: '#3affff', parts: ['robo'], fields: [] },
   { id: 'alien', n: 'Alien Rat', r: 'mythical', earn: 4500, inv: 1, d: 'Came from a planet made entirely of cheese. Wants to go home.', fur: '#7aff6a', belly: '#d8ffd0', eye: '#111111', parts: ['antennae'], fields: [] },
+  // event rats: only appear while their event runs (the owner can change which rats each event brings)
+  { id: 'aurorarat', n: 'Aurora Rat', r: 'legendary', earn: 2600, evx: 'aurora', d: 'Its fur ripples green and violet like the northern sky.', fur: '#1d5a6e', belly: '#8affd0', eye: '#7affc8', parts: ['glowtail', 'starhalo'], fields: [] },
+  { id: 'meteorrat', n: 'Meteor Rat', r: 'mythical', earn: 5200, evx: 'meteor', d: 'Fell from the sky still smoking. Hot to the touch, warm at heart.', fur: '#3a2e2c', belly: '#ff8a3a', eye: '#ffd23a', parts: ['flametail', 'crystals'], fields: [] },
+  { id: 'pixelrat', n: 'Pixel Rat', r: 'superrare', earn: 950, evx: 'pixel', d: 'Escaped from an old video game. Moves in 8 directions only.', fur: '#3a7aff', belly: '#ff5cf0', eye: '#ffffff', parts: ['gears'], fields: [] },
+  { id: 'frostbite', n: 'Frostbite Rat', r: 'legendary', earn: 3300, evx: 'frozen', d: 'Its whiskers are tiny icicles. Sneezes snowflakes.', fur: '#bfe9ff', belly: '#ffffff', eye: '#2a6aff', parts: ['icecrown', 'fluff'], fields: [] },
+  { id: 'twinrat', n: 'Twin Rat', r: 'rare', earn: 220, evx: 'double', d: 'There are always two. Nobody has ever found out which one is the original.', fur: '#ff9fcf', belly: '#fff0f8', parts: ['cheeks'], fields: [] },
   { id: 'invader', n: 'Invader King', r: 'apocryphal', earn: 15000, inv: 1, d: 'Leader of the invasion. Its ray gun shoots confetti.', fur: '#5a2a8a', belly: '#c08aff', parts: ['crown', 'antennae'], fields: [] }];
 const SP = {}; SPECIES.forEach((s, i) => { s.i = i; SP[s.id] = s; });
 
@@ -90,18 +96,31 @@ const MUTATIONS = {
   rain: { n: 'Rain', kind: 'wx', col: '#6fb4ff', mult: 2, pts: 5 },
   snow: { n: 'Snow', kind: 'wx', col: '#e8f6ff', mult: 2, pts: 5 },
   thunder: { n: 'Thunder', kind: 'wx', col: '#ffe14a', mult: 2.5, pts: 8 },
-  disco: { n: 'Disco', kind: 'disco', col: '#d6a8ff', mult: 2, pts: 8 } };
+  disco: { n: 'Disco', kind: 'disco', col: '#d6a8ff', mult: 2, pts: 8 },
+  // event mutations (one per rat, like weather)
+  aurora: { n: 'Aurora', kind: 'wx', col: '#5cffb4', mult: 3, pts: 12 },
+  meteor: { n: 'Meteor', kind: 'wx', col: '#ff8a3a', mult: 3.5, pts: 14 },
+  pixel: { n: 'Pixel', kind: 'wx', col: '#5c8aff', mult: 2.5, pts: 10 },
+  frozen: { n: 'Frozen', kind: 'wx', col: '#a8e4ff', mult: 2.5, pts: 10 },
+  // Reverse: every colour turned inside out. It can happen to any rat, any time (very rarely)
+  reverse: { n: 'Reverse', kind: 'rev', col: '#222222', mult: 5, pts: 40 } };
 
 // ---------- global events ----------
 const EVENTS = {
-  rain: { n: 'Rain', d: '30% chance for the Rain mutation.', col: '#6fb4ff', dur: 600, eff: { rain: 0.30 }, sky: 'rain' },
-  snow: { n: 'Snow', d: '30% chance for the Snow mutation.', col: '#e8f6ff', dur: 600, eff: { snow: 0.30 }, sky: 'snow' },
-  thunder: { n: 'Thunderstorm', d: '30% chance for the Thunder mutation.', col: '#ffe14a', dur: 600, eff: { thunder: 0.30 }, sky: 'storm' },
-  dj: { n: 'DJ Event', d: '35% chance of a disco ball on a rat’s head.', col: '#d6a8ff', dur: 600, eff: { disco: 0.35 }, sky: 'disco' },
+  rain: { n: 'Rain', d: '{rain} chance for the Rain mutation.', col: '#6fb4ff', dur: 600, eff: { rain: 0.30 }, sky: 'rain' },
+  snow: { n: 'Snow', d: '{snow} chance for the Snow mutation.', col: '#e8f6ff', dur: 600, eff: { snow: 0.30 }, sky: 'snow' },
+  thunder: { n: 'Thunderstorm', d: '{thunder} chance for the Thunder mutation.', col: '#ffe14a', dur: 600, eff: { thunder: 0.30 }, sky: 'storm' },
+  dj: { n: 'DJ Event', d: '{disco} chance of a disco ball on a rat’s head.', col: '#d6a8ff', dur: 600, eff: { disco: 0.35 }, sky: 'disco' },
   heaven: { n: "Heaven's Event", d: 'Rare, high-rarity rats appear far more often.', col: '#fff3c4', dur: 600, eff: { heaven: 1 }, sky: 'heaven' },
-  goldmoon: { n: 'Gold Moon', d: '80% chance for the Gold mutation.', col: '#ffcf3a', dur: 480, eff: { gold: 0.80 }, sky: 'goldmoon' },
-  diamond: { n: 'Diamond Event', d: '50% chance for the Diamond mutation.', col: '#9fe8ff', dur: 480, eff: { diamond: 0.50 }, sky: 'diamond' },
-  rainbow: { n: 'Rainbow Event', d: '30% chance for the Rainbow mutation.', col: '#ff7ad9', dur: 480, eff: { rainbow: 0.30 }, sky: 'rainbow' },
+  goldmoon: { n: 'Gold Moon', d: '{gold} chance for the Gold mutation.', col: '#ffcf3a', dur: 480, eff: { gold: 0.80 }, sky: 'goldmoon' },
+  diamond: { n: 'Diamond Event', d: '{diamond} chance for the Diamond mutation.', col: '#9fe8ff', dur: 480, eff: { diamond: 0.50 }, sky: 'diamond' },
+  rainbow: { n: 'Rainbow Event', d: '{rainbow} chance for the Rainbow mutation.', col: '#ff7ad9', dur: 480, eff: { rainbow: 0.30 }, sky: 'rainbow' },
+  aurora: { n: 'Aurora Event', d: 'Northern lights fill the sky. {aurora} chance for the Aurora mutation, and Aurora Rats appear.', col: '#5cffb4', dur: 600, eff: { aurora: 0.35 }, sky: 'aurora', rats: ['aurorarat'], ratChance: 0.03 },
+  meteor: { n: 'Meteor Shower', d: 'Meteors fall across the fields. {meteor} chance for the Meteor mutation, and Meteor Rats appear.', col: '#ff8a3a', dur: 600, eff: { meteor: 0.20 }, sky: 'meteor', rats: ['meteorrat'], ratChance: 0.02 },
+  pixel: { n: 'Pixel Party', d: 'The world goes 8-bit! {pixel} chance for the Pixel mutation, and Pixel Rats appear.', col: '#5c8aff', dur: 480, eff: { pixel: 0.25 }, sky: 'pixel', rats: ['pixelrat'], ratChance: 0.04 },
+  frozen: { n: 'Frozen Over', d: 'Everything freezes. {frozen} chance for the Frozen mutation, and Frostbite Rats appear.', col: '#a8e4ff', dur: 600, eff: { frozen: 0.30 }, sky: 'frozen', rats: ['frostbite'], ratChance: 0.03 },
+  alien: { n: 'Alien Invasion', d: 'UFOs fly over the fields and beam Alien Rats down into them!', col: '#7aff6a', dur: 480, eff: {}, sky: 'alien', rats: ['alien'], ratChance: 0, drop: { every: 25, n: 2 } },
+  double: { n: 'Double Trouble', d: 'Every new rat has a {double} chance to come with a twin!', col: '#ff9fcf', dur: 480, eff: { double: 0.35 }, sky: 'double', rats: ['twinrat'], ratChance: 0.03 },
   ultra: { n: 'ULTRA EVENT', d: 'Every event at once!', col: '#ff5cf0', dur: 300, eff: { rain: 0.30, snow: 0.30, thunder: 0.30, disco: 0.35, heaven: 1, gold: 0.80, diamond: 0.50, rainbow: 0.30, secret: 1 }, sky: 'ultra' } };
 
 // ---------- rods ----------
@@ -300,7 +319,7 @@ const DEFAULT_CONFIG = {
   rarityEarn: Object.fromEntries(RARITIES.map(r => [r.id, r.base])),
   speciesEarn: Object.fromEntries(SPECIES.filter(s => s.earn).map(s => [s.id, s.earn])),
   mutMult: Object.fromEntries(Object.entries(MUTATIONS).map(([k, m]) => [k, m.mult])),
-  natural: { gold: 0.01, diamond: 0.003, rainbow: 0.001 },
+  natural: { gold: 0.01, diamond: 0.003, rainbow: 0.001, reverse: 0.001 },
   levelMult: 0.1,        // each rat level adds 10% earnings
   evoMult: 2,            // each evolution stage doubles earnings
   rebirthLuck: 0.10,     // +10% luck for every rebirth
@@ -326,6 +345,9 @@ const DEFAULT_CONFIG = {
   promo: { on: true, items: ['discolights'], ends: 0 },
   autoEvents: true, eventEvery: [1200, 2400], // seconds between automatic events
   eventDur: {},          // the owner's own event lengths in seconds, e.g. { rain: 900 }
+  // every event's settings: mutation chances (eff), spawn speed, its own rats and how often they appear,
+  // the Reverse chance while it runs (0 = the normal chance), whether it can start by itself, and UFO drops
+  events: Object.fromEntries(Object.entries(EVENTS).map(([id, e]) => [id, { eff: Object.assign({}, e.eff), spawnMult: 1, rats: (e.rats || []).slice(), ratChance: e.ratChance || 0, reverse: 0, auto: id !== 'ultra', drop: e.drop ? Object.assign({}, e.drop) : { every: 0, n: 0 } }])),
   autoInvasions: true, invasionEvery: [2700, 5400], invasionDur: 240,
   rebirthLevel: 50, rebirthStep: 10, rebirthResetsMoney: true,
   maxRatsPerField: 18, spawnEvery: 2.5,
@@ -354,7 +376,7 @@ function ratEarn(cfg, rat, mods) {
   const parts = [], base = baseEarn(cfg, rat.sp);
   parts.push({ k: 'base', n: cfg.speciesEarn[rat.sp] != null ? s.n + ' value' : RI[s.r].n + ' base', v: base });
   let t = base;
-  for (const m of [rat.mut, rat.wx, rat.disco ? 'disco' : null]) if (m && cfg.mutMult[m]) { parts.push({ k: 'mut', n: MUTATIONS[m].n + ' mutation', x: +cfg.mutMult[m] }); t *= cfg.mutMult[m]; }
+  for (const m of [rat.mut, rat.wx, rat.disco ? 'disco' : null, rat.rev ? 'reverse' : null]) if (m && cfg.mutMult[m]) { parts.push({ k: 'mut', n: MUTATIONS[m].n + ' mutation', x: +cfg.mutMult[m] }); t *= cfg.mutMult[m]; }
   const lm = 1 + cfg.levelMult * ((rat.lvl || 1) - 1); if (lm !== 1) { parts.push({ k: 'lvl', n: 'Level ' + rat.lvl, x: lm }); t *= lm; }
   if (rat.evo) { const em = Math.pow(cfg.evoMult, rat.evo); parts.push({ k: 'evo', n: 'Evolution ' + ['', 'I', 'II', 'III'][rat.evo], x: em }); t *= em; }
   if (mods.rebirths) { const rm = 1 + cfg.rebirthEarn * mods.rebirths; parts.push({ k: 'reb', n: mods.rebirths + ' rebirth' + (mods.rebirths > 1 ? 's' : ''), x: rm }); t *= rm; }
@@ -382,29 +404,48 @@ function pickWeighted(w, r) { let t = 0; for (const x of w) t += Math.max(0, x);
 // species of a rarity that can appear in a field (or in eggs when fid is null)
 function speciesFor(rid, fid, opts) {
   opts = opts || {};
-  let list = SPECIES.filter(s => s.r === rid && !s.inv && !(s.secret && !opts.secret));
+  let list = SPECIES.filter(s => s.r === rid && !s.inv && !s.evx && !(s.secret && !opts.secret));
   if (fid) { const native = list.filter(s => s.fields.includes(fid)); if (native.length) list = native; }
   return list;
 }
 // ev: merged event effects; mutMul: Mutation potion multiplier for natural chances
 function rollMutations(cfg, ev, mutMul, r) {
-  ev = ev || {}; mutMul = mutMul || 1; const out = { mut: null, wx: null, disco: 0 };
+  ev = ev || {}; mutMul = mutMul || 1; const out = { mut: null, wx: null, disco: 0, rev: 0 };
   const ch = k => Math.min(0.95, Math.max(ev[k] || 0, (cfg.natural[k] || 0) * mutMul));
   if (r() < ch('rainbow')) out.mut = 'rainbow'; else if (r() < ch('diamond')) out.mut = 'diamond'; else if (r() < ch('gold')) out.mut = 'gold';
-  const wx = ['rain', 'snow', 'thunder'].filter(k => ev[k]); if (wx.length) { const k = wx[(r() * wx.length) | 0]; if (r() < ev[k]) out.wx = k; }
+  const wx = WXM.filter(k => ev[k] > 0); if (wx.length) { const k = wx[(r() * wx.length) | 0]; if (r() < ev[k]) out.wx = k; }
   if (ev.disco && r() < ev.disco) out.disco = 1;
+  if (r() < ch('reverse')) out.rev = 1;
   return out;
 }
-function mergeEvents(active) { const e = {}; for (const a of active || []) { const d = EVENTS[a.id]; if (!d) continue; for (const k in d.eff) e[k] = Math.max(e[k] || 0, d.eff[k]); } return e; }
+const WXM = Object.keys(MUTATIONS).filter(k => MUTATIONS[k].kind === 'wx');
+// the running events' combined effects, using the owner's settings for each event
+function evCfg(cfg, id) { return (cfg && cfg.events && cfg.events[id]) || {}; }
+function evEff(cfg, id) { const d = EVENTS[id]; const o = evCfg(cfg, id).eff; return Object.assign({}, d ? d.eff : {}, o || {}); }
+function mergeEvents(active, cfg) {
+  const e = { excl: [], spawnMult: 1 };
+  for (const a of active || []) {
+    const d = EVENTS[a.id]; if (!d) continue; const c = evCfg(cfg, a.id), eff = evEff(cfg, a.id);
+    for (const k in eff) e[k] = Math.max(e[k] || 0, +eff[k] || 0);
+    if (a.id === 'ultra') for (const id of Object.keys(EVENTS)) if (id !== 'ultra' && id !== 'alien') { const x = evEff(cfg, id); for (const k in x) e[k] = Math.max(e[k] || 0, +x[k] || 0); }
+    const rats = (c.rats || d.rats || []).filter(s => SP[s]), rc = c.ratChance != null ? +c.ratChance : (d.ratChance || 0);
+    if (rats.length && rc > 0) e.excl.push({ rats, chance: Math.min(1, rc) });
+    if (+c.spawnMult > 0) e.spawnMult = Math.max(e.spawnMult, +c.spawnMult);
+    if (+c.reverse > 0) e.reverse = Math.max(e.reverse || 0, +c.reverse);
+  }
+  return e;
+}
+// an event's description with the owner's numbers in it
+function evDesc(cfg, id) { const d = EVENTS[id]; if (!d) return ''; const eff = evEff(cfg, id); return d.d.replace(/\{(\w+)\}/g, (m, k) => Math.round((+eff[k] || 0) * 1000) / 10 + '%'); }
 function deepMerge(base, over) {
   if (over == null || typeof over !== 'object' || Array.isArray(over)) return over === undefined ? base : over;
   const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
   for (const k of Object.keys(over)) out[k] = (base && typeof base[k] === 'object' && base[k] && !Array.isArray(base[k])) ? deepMerge(base[k], over[k]) : over[k];
   return out;
 }
-function ratName(rat) { const s = SP[rat.sp]; if (!s) return 'Rat'; const m = []; if (rat.mut) m.push(MUTATIONS[rat.mut].n); if (rat.wx) m.push(MUTATIONS[rat.wx].n); if (rat.disco) m.push('Disco'); return (m.length ? m.join(' ') + ' ' : '') + s.n + (rat.evo ? ' ' + ['', 'I', 'II', 'III'][rat.evo] : ''); }
+function ratName(rat) { const s = SP[rat.sp]; if (!s) return 'Rat'; const m = []; if (rat.mut) m.push(MUTATIONS[rat.mut].n); if (rat.wx) m.push(MUTATIONS[rat.wx].n); if (rat.disco) m.push('Disco'); if (rat.rev) m.unshift('Reverse'); return (m.length ? m.join(' ') + ' ' : '') + s.n + (rat.evo ? ' ' + ['', 'I', 'II', 'III'][rat.evo] : ''); }
 
-const RCDATA = { RARITIES, RI, SPECIES, SP, FIELDS, FI, MUTATIONS, EVENTS, RODS, ROD, POTIONS, POT, EGGS, EGG, MYSTERY, COSMETICS, COS, COS_SLOTS, COS_CATS, ACHIEVEMENTS, ACH,
+const RCDATA = { evDesc, evCfg, evEff, WXM, RARITIES, RI, SPECIES, SP, FIELDS, FI, MUTATIONS, EVENTS, RODS, ROD, POTIONS, POT, EGGS, EGG, MYSTERY, COSMETICS, COS, COS_SLOTS, COS_CATS, ACHIEVEMENTS, ACH,
   DAILY, DAILY_COS_ROTATION, QUESTS, STATIONS, ST, PORTALS, LOBBY, showcaseStand, canEnter, lockText, aName, mulberry, FIELD_R, fieldLayout, blocked, DEFAULT_CONFIG,
   fmtN, fmtMoney, fmtDur, ratXpNeed, playerXpNeed, baseEarn, ratEarn, sellPrice, slotPrice, storagePrice, inventoryPrice, capPrice, rebirthNeed, spawnWeights, pickWeighted,
   speciesFor, rollMutations, mergeEvents, deepMerge, ratName, VERSION: 1 };
